@@ -129,7 +129,6 @@ def resolve_stage(pte: Union[PTE, SATP], va: VA, resulting_address: int, vpn_no:
     else:
         hi_result = resolve_satp_addr(pte, resulting_address)
     lo_result = resolve_va_addr(va, resulting_address, vpn_no, PTESIZE)
-    print(hi_result, lo_result, type(pte))
     return hi_result | lo_result
 
 
@@ -285,6 +284,7 @@ class TranslationWalk:
         # Intermediate PTEs
         for index, level in enumerate(range(self.startLevel, self.endLevel, -1)):
             self.ptes[index + 1].address = CR.resolve(self.ptes[index], self.va, self.ptes[index + 1].address, level)
+            self.ptes[index].set_pointer()
 
         # handle the leaf
         CR.resolve_leaf(self.ptes[-1], self.va, self.pa, self.endLevel)

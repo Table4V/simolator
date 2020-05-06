@@ -17,7 +17,7 @@ pa.set(0x7d_dead_beef, mode=39)
 # print(pa)
 
 ptes = [PTE(mode=39), PTE(mode=39), PTE(mode=39)]
-# ptes[1].broadcast_ppn(0x116151b4c)
+ptes[1].ppn[1] = 0b100011001
 
 walk = TranslationWalk(39, '4K', satp, va, pa, ptes)
 walk.display()

@@ -1,5 +1,15 @@
 from typing import List, Tuple, Union
 
+from utils import safe_to_bin
+
+
+class InvalidXWR(Exception):
+    pass  # this may be worth moving to a warning if we foresee this being valid?
+
+
+class InvalidDAU(Exception):
+    pass  # this may be worth moving to a warning if we foresee this being valid?
+
 
 class SATP:
     mode = 0
@@ -39,15 +49,15 @@ class SATP:
 
 class PTE:
     class ATTRIBUTES:
-        V = 0
-        R = 0
-        W = 0
-        X = 0
-        U = 0
-        G = 0
-        A = 0
-        D = 0
-        RSW = 0
+        V = 1
+        R = None
+        W = None
+        X = None
+        U = None
+        G = None
+        A = None
+        D = None
+        RSW = 0  # hardwire to 0 for now
 
         defined = False
 
@@ -66,10 +76,20 @@ class PTE:
             self.D = (attributes >> 7) & 0x1
             self.RSW = (attributes >> 8) & 0x3
 
+        @property
+        def flags(self):
+            return (self.D, self.A, self.G, self.U, self.X, self.W, self.R, self.V)
+
+        def __repr__(self):
+            s = safe_to_bin(self.RSW, 2)
+            for field in self.flags:
+                s += safe_to_bin(field, 1)
+            return s
+
     mode = 0
     address = None
     ppn = [None, None, None, None]
-    attributes = ATTRIBUTES()
+    # attributes = ATTRIBUTES()
     isAddrEmpty = True
     isDataEmpty = True
     mode = 0
@@ -92,6 +112,7 @@ class PTE:
         self.mode = mode
         self.level = level
         self.ppn = [None for i in self.widths if i]
+        self.attributes = self.ATTRIBUTES()
 
     def broadcast_ppn(self, ppn: int, start_level=0):
         for i in range(start_level):
@@ -139,7 +160,21 @@ class PTE:
     # New: make it simpler to find whether it is a leaf
     @property
     def leaf(self):
-        return self.defined and (self.attributes.X | self.attributes.W | self.attributes.R)
+        return self.attributes.defined and (self.attributes.X | self.attributes.W | self.attributes.R)
+
+    def set_pointer(self):
+        ''' Clear XWR (making this a pointer entry in the table). If they're set, raises an error '''
+        ''' For non-leaf PTEs, the D, A, and U bits are reserved for future use and must be cleared by software for forward compatibility. '''
+        if self.leaf:
+            raise InvalidXWR()
+        if self.attributes.U or self.attributes.D or self.attributes.A:
+            raise InvalidDAU()
+        self.attributes.X = 0
+        self.attributes.W = 0
+        self.attributes.R = 0
+        self.attributes.D = 0
+        self.attributes.A = 0
+        self.attributes.U = 0
 
     def data(self):
         return None  # TODO: handle attrs so this can go trhough
@@ -170,7 +205,7 @@ class PTE:
         addr_str = f'{self.address:x}' if self.address != None else '???'
         header = f'PTE: {data_str} ({ppn_str}) @{addr_str}'
         display_line = f'|RSDAGUXWRV|'
-        val_line = f'|{" "*10}|'  # TODO: FLAGS
+        val_line = f'|{self.attributes}|'
         for i, (width, value) in enumerate(zip(self.widths, self.ppn)):
             name = f'PPN{i}'
             display_line = f'|{name:^{width}}{display_line}'
