@@ -1,10 +1,36 @@
 #!/usr/bin/python3
-
 ''' For various minor constants and other stuff '''
 PT_LEVEL_MAP = {
-    # TODO: maybe move to a constants?
     # Number of levels in the page table, we'll use in Context init
     32: 2,
     39: 3,
     48: 4
+}
+
+MAX_PA_MAP = {
+    # Largest PA possible + 1, used as default in Context init
+    32: 2**34,
+    39: 2**56,
+    48: 2**56
+}
+
+PA_BITS = {32: 34, 39: 56, 48: 56}
+
+MODE_PAGESIZE_LEVEL_MAP = {
+    # Map the mode and the pagesize to the end level
+    32: {
+        '4K': 0,
+        '4M': 1
+    },
+    39: {
+        '4K': 0,
+        '2M': 1,
+        '1G': 2
+    },
+    48: {
+        '4K': 0,
+        '2M': 1,
+        '1G': 2,
+        '512G': 3
+    },
 }

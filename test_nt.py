@@ -5,7 +5,6 @@ from NewTranslator import *
 satp = SATP(mode=39)
 
 
-
 va = VA(mode=39)
 # print(va)
 va.set(0x7d_dead_beef)

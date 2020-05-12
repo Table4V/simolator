@@ -13,6 +13,8 @@ from typing import List, Tuple, Union
 
 from core_types import PA, VA, PTE, SATP
 
+from utils import num_hex_digits
+
 arch = "RV32"
 PageTable = {}
 
@@ -240,16 +242,16 @@ class TranslationWalk:
 
         CR = ConstraintResolver(mode=self.mode)
         # First: Deal with SATP one
-        # print(self.startLevel, self.endLevel)
         self.ptes[0].address = CR.resolve(self.satp, self.va, self.ptes[0].address, self.startLevel)
 
         # Intermediate PTEs
-        for index, level in enumerate(range(self.startLevel, self.endLevel, -1)):
+        for index, level in enumerate(range(self.startLevel - 1, self.endLevel - 1, -1)):
             self.ptes[index + 1].address = CR.resolve(self.ptes[index], self.va, self.ptes[index + 1].address, level)
             self.ptes[index].set_pointer()
 
         # handle the leaf
         CR.resolve_leaf(self.ptes[-1], self.va, self.pa, self.endLevel)
+        assert self.va.data() != None, self.display()
         # self.ptes[-1].broadcast_ppn(ppn)
         # self.pa.set(phys_ppn, mode=self.mode)
         # self.va.set_big_page(self.endLevel, offset)
@@ -264,3 +266,4 @@ class TranslationWalk:
 
         print('------------------------------------------------------------------------')
         print()
+
