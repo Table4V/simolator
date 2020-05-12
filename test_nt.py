@@ -8,11 +8,11 @@ satp = SATP(mode=39)
 
 va = VA(mode=39)
 # print(va)
-va.set(0x7d_dead_beef, mode=39)
+va.set(0x7d_dead_beef)
 # print(va)
 pa = PA(mode=39)
 # print(pa)
-pa.set(0x7d_dead_beef, mode=39)
+pa.set(0x7d_dead_beef)
 # print(pa.ppn)
 # print(pa)
 

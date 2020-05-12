@@ -125,21 +125,21 @@ class PTE:
 
         # self.set(level, 0, 0, mode, False)
 
-    def set(self, level, address, data, mode=32, save=True):
+    def set(self, level, address, data, save=True):
         self.level = level
-        self.mode = mode
+        # self.mode = mode
         if address not in PageTable:
             self.address = address
             self.attributes.set(data & 0x3FF)
 
-            if mode == 32:
+            if self.mode == 32:
                 self.ppn.append((data >> 10) & 0x3FF)
                 self.ppn.append((data >> 20) & 0xFFF)
-            if mode == 39:
+            if self.mode == 39:
                 self.ppn.append((data >> 10) & 0x1FF)
                 self.ppn.append((data >> 19) & 0x1FF)
                 self.ppn.append((data >> 28) & 0x3FFFFFF)
-            if mode == 48:
+            if self.mode == 48:
                 self.ppn.append((data >> 10) & 0x1FF)
                 self.ppn.append((data >> 19) & 0x1FF)
                 self.ppn.append((data >> 28) & 0x1FF)
@@ -241,19 +241,19 @@ class VA:
             self.isEmpty = False
             self.set(data, mode)
 
-    def set(self, data=0xFFFFFFFFFFFF, mode=32):
+    def set(self, data=0xFFFFFFFFFFFF):
         self.offset = data & 0xFFF
-        self.mode = mode
+        # self.mode = mode
         self.vpn = []
 
-        if mode == 32:
+        if self.mode == 32:
             self.vpn.append((data >> 12) & 0x3FF)
             self.vpn.append((data >> 22) & 0x3FF)
-        if mode == 39:
+        if self.mode == 39:
             self.vpn.append((data >> 12) & 0x1FF)
             self.vpn.append((data >> 21) & 0x1FF)
             self.vpn.append((data >> 30) & 0x1FF)
-        if mode == 48:
+        if self.mode == 48:
             self.vpn.append((data >> 12) & 0x1FF)
             self.vpn.append((data >> 21) & 0x1FF)
             self.vpn.append((data >> 30) & 0x1FF)
@@ -328,17 +328,17 @@ class PA:
         else:
             self.ppn = [None for i in self.widths if i != None]
 
-    def set(self, data=0x12345678, mode=32):
+    def set(self, data=0x12345678):
         self.ppn = []
         self.offset = data & 0xFFF
-        if mode == 32:
+        if self.mode == 32:
             self.ppn.append((data >> 12) & 0x3FF)
             self.ppn.append((data >> 22) & 0x3FF)
-        if mode == 39:
+        if self.mode == 39:
             self.ppn.append((data >> 12) & 0x1FF)
             self.ppn.append((data >> 21) & 0x1FF)
             self.ppn.append((data >> 30) & 0x1FF)
-        if mode == 48:
+        if self.mode == 48:
             self.ppn.append((data >> 12) & 0x1FF)
             self.ppn.append((data >> 21) & 0x1FF)
             self.ppn.append((data >> 30) & 0x1FF)
