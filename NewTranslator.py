@@ -141,40 +141,6 @@ def resolve_stage_leaf(pte: PTE, va: VA, pa: PA, final_level: int):
     resolve_va_pa_final(va, pa, final_level - 1)
 
 
-# TODO: maybe come up with some system to avoid the gross none checks?
-# TODO: maybe move this to be a function of the mode to avoid the resulting PTE size checks?
-def resolve_constraints(pte_component,
-                        va_component,
-                        resulting_address,
-                        pte_bits,
-                        va_bits,
-                        ra_bits,
-                        PAGESIZE=2**12,
-                        PTESIZE=4) -> Tuple[int, int, int]:
-    '''
-    Resolve the constraints using Page * Pagesize + VA * PTESIZE = ResultingAddress.
-    Fills values in randomly where there are degrees of freedom.
-    '''
-    if pte_component != None and va_component != None and resulting_address != None:
-        if pte_component * PAGESIZE + va_component * PTESIZE != resulting_address:
-            raise InvalidConstraints()
-    elif pte_component != None and va_component != None:
-        resulting_address = pte_component * PAGESIZE + va_component * PTESIZE
-    elif pte_component != None and resulting_address != None:
-        va_component = (resulting_address - (pte_component * PAGESIZE)) // PTESIZE
-    elif va_component != None and resulting_address != None:
-        pte_component = (resulting_address - (va_component * PTESIZE)) // PAGESIZE
-    elif resulting_address == None:
-        resulting_address = randbits(ra_bits)
-        return resolve_constraints(pte_component, va_component, resulting_address, pte_bits, va_bits, ra_bits, PAGESIZE,
-                                   PTESIZE)
-    elif pte_bits == None:
-        pte_component = randbits(pte_bits)
-        return resolve_constraints(pte_component, va_component, resulting_address, pte_bits, va_bits, ra_bits, PAGESIZE,
-                                   PTESIZE)
-    return pte_component, va_component, resulting_address
-
-
 class ConstraintResolver:
     '''
     Convenience class to dispatch the various types of constraints we might need to resolve.
