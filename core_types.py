@@ -1,7 +1,9 @@
 from typing import List, Tuple, Union
 
-from utils import safe_to_bin
+from utils import safe_to_bin, field_to_string
+import math
 
+DEFAULT_FORMAT = 'b'
 
 class InvalidXWR(Exception):
     pass  # this may be worth moving to a warning if we foresee this being valid?
@@ -32,14 +34,17 @@ class SATP:
     def ppn_width(self):
         return 22 if self.mode == 32 else 44
 
-    def __repr__(self):
+    def __str__(self):
+        return self.__format__(DEFAULT_FORMAT)
+
+    def __format__(self, format_code=DEFAULT_FORMAT):
         mode_flags = {32: 1, 39: 8, 48: 9}.get(self.mode, 0)
 
         width = 32 if self.mode == 32 else 64
         asid_width = 9 if self.mode == 32 else 16
         mode_str = 'M' if self.mode == 32 else 'Mode'
-        ppn_str = ' ' * self.ppn_width if self.ppn is None else f'{self.ppn:0{self.ppn_width}b}'
-        ppn_hex = '???' if self.ppn is None else f'{self.ppn:x}'
+        ppn_str = field_to_string(self.ppn, self.ppn_width, format_code)
+        ppn_hex = '???' if self.ppn is None else hex(self.ppn)
 
         top_str = f'|{mode_str}|{"ASID":^{asid_width}}|{"PPN":^{self.ppn_width}}|'
         main_str = f'|{mode_flags:b}|{self.asid:0{asid_width}b}|{ppn_str}|'
@@ -80,7 +85,7 @@ class PTE:
         def flags(self):
             return (self.D, self.A, self.G, self.U, self.X, self.W, self.R, self.V)
 
-        def __repr__(self):
+        def __str__(self):
             s = safe_to_bin(self.RSW, 2)
             for field in self.flags:
                 s += safe_to_bin(field, 1)
@@ -199,7 +204,10 @@ class PTE:
         elif self.mode == 48:
             return (self.ppn[3] << 27) | (self.ppn[2] << 18) | (self.ppn[1] << 9) | self.ppn[0]
 
-    def __repr__(self):
+    def __str__(self):
+        return self.__format__(DEFAULT_FORMAT)
+
+    def __format__(self, format_code=DEFAULT_FORMAT):
         data_str = f'{self.data():x}' if self.data() != None else '???'
         ppn_str = f'0x{self.get_ppn():x}' if self.get_ppn() != None else '???'
         addr_str = f'{self.address:x}' if self.address != None else '???'
@@ -209,7 +217,7 @@ class PTE:
         for i, (width, value) in enumerate(zip(self.widths, self.ppn)):
             name = f'PPN{i}'
             display_line = f'|{name:^{width}}{display_line}'
-            vs = ' ' * width if value is None else f'{value:0{width}b}'
+            vs = field_to_string(value, width, format_code)
             val_line = f'|{vs}{val_line}'
 
         return f'{header}\n{display_line}\n{val_line}'
@@ -298,15 +306,18 @@ class VA:
             return [9, 9, 9, 9]
         return [None, None, None, None]
 
-    def __repr__(self):
+    def __str__(self):
+        return self.__format__()
+
+    def __format__(self, format_code=DEFAULT_FORMAT):
         data_str = f'{self.data():x}' if self.data() != None else '???'
         header = f'VA: {data_str}'
         display_line = f'|{"Offset":^12}|'
-        val_line = f'|{self.offset:012b}|' if self.offset != None else f'|{" "*12}|'
+        val_line = f'|{field_to_string(self.offset, 12, format_code)}|'
         for i, (width, value) in enumerate(zip(self.widths, self.vpn)):
             name = f'VPN{i}'
             display_line = f'|{name:^{width}}{display_line}'
-            vs = ' ' * width if value is None else f'{value:0{width}b}'
+            vs = field_to_string(value, width, format_code)
             val_line = f'|{vs}{val_line}'
 
         return f'{header}\n{display_line}\n{val_line}'
@@ -367,15 +378,19 @@ class PA:
             return [9, 9, 9, 17]
         return [None, None, None, None]
 
-    def __repr__(self):
+    def __str__(self):
+        return self.__format__(DEFAULT_FORMAT)
+
+    def __format__(self, format_code=DEFAULT_FORMAT):
         data_str = f'{self.data():x}' if self.data() != None else '???'
         header = f'PA: {data_str}'
         display_line = f'|{"Offset":^12}|'
-        val_line = f'|{self.offset:012b}|' if self.offset != None else f'|{" "*12}|'
+        val_line = f'|{field_to_string(self.offset, 12, format_code)}|'
         for i, (width, value) in enumerate(zip(self.widths, self.ppn)):
             name = f'PPN{i}'
             display_line = f'|{name:^{width}}{display_line}'
-            vs = ' ' * width if value is None else f'{value:0{width}b}'
+            vs = field_to_string(value, width, format_code)
             val_line = f'|{vs}{val_line}'
 
         return f'{header}\n{display_line}\n{val_line}'
+        

@@ -201,11 +201,7 @@ class TranslationWalk:
                  satp: SATP = None,
                  va: VA = None,
                  pa: PA = None,
-                 ptes: List[PTE] = None,
-                 isLoad=False):
-        # if isLoad:
-        #     return
-
+                 ptes: List[PTE] = None):
         self.mode = mode
         self.pageSize = pageSize
         self.satp = satp
@@ -258,14 +254,13 @@ class TranslationWalk:
         # self.pa.set(phys_ppn, mode=self.mode)
         # self.va.set_big_page(self.endLevel, offset)
 
-    def display(self):
+    def display(self, format_code='x'):
         ''' Print the whole thingy out very nicely '''
         print('------------------------------------------------------------------------')
         print(f'Translation Walk: Mode=Sv{self.mode}, PageSize={self.pageSize}')
-        print(self.satp)
-        print(self.va)
-        for pte in self.ptes:
-            print(pte)
-        print(self.pa)
+
+        for stage in [self.satp, self.va, *self.ptes, self.pa]:
+            print(format(stage, format_code))
+
         print('------------------------------------------------------------------------')
         print()

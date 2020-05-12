@@ -22,6 +22,6 @@ ptes[1].ppn[1] = 0b100011001
 walk = TranslationWalk(39, '4K', satp, va, pa, ptes)
 walk.display()
 walk.resolve()
-walk.display()
+walk.display(format_code='b')
 # walk.resolve()
 # walk.display()
