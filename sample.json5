@@ -1,0 +1,160 @@
+{
+    // comments
+    mode: 48, // Sv3/9
+    // Sample JSON for running test cases
+    // memory_size: 0x8000000000,
+    test_cases: [
+        { repeats: 4 },
+        {
+            repeats: 1, // How many times to make the test case
+            // Probabilistic fields:
+            // same_va_pa: 0.05,
+            // // reuse_pte: 0.05,
+            // aliasing: 0.05,
+            // // VA and PA take the data
+            // va: 0x99301234,
+            // pa: 0x14231234,
+            ptes: [
+                {
+                    // PTE entry -- set the address + the PPNs
+                    address: 0xcafebabe0,
+                    // ppns: [null, 0x119, null],
+                },
+                {},
+                {},
+                {
+                    attributes: {
+                        // Set the flags (RSW, DAGUXWRV) probabilistically on the PTE
+                        G: 0.5, // Float for probabilities
+                        U: 1, // 0 - 1 aren't probabilities
+                        X: 0.5, // Float for probabilities
+                        W: 0, // 0 - 1 aren't probabilities
+                        R: 1, // 0 - 1 aren't probabilities
+                    },
+                },
+            ],
+        },
+        {
+            same_va_pa: 1,
+        },
+        {
+            repeats: 4,
+            aliasing: 1,
+        },
+        {
+            pagesize: '2M',
+        },
+        {
+            reuse_satp: 1,
+            ptes: [
+                {},
+                {
+                    // PTE entry -- set the address + the PPNs
+                    address: [0xdeadbeef0, 0xcafebabe0],
+                    ppns: [null, 0x119, null],
+                },
+                {},
+            ],
+        },
+    ],
+}
+/*{
+    // comments
+    mode: 39, // Sv3/9
+    // Sample JSON for running test cases
+    memory_size: 0x8000000000,
+    test_cases: [
+        {
+            // If nothing is specified, just randomly create simple cases
+            repeats: 100,
+        },
+        {
+            repeats: 1, // How many times to make the test case
+            // Probabilistic fields:
+            same_va_pa: 0.05,
+            reuse_pte: 0.05,
+            aliasing: 0.05,
+            // VA and PA take the data
+            va: 0x9930_1234,
+            // pa: 0x1423_1234,
+            ptes: [
+                {},
+                {
+                    // PTE entry -- set the address + the PPNs
+                    address: 0x7b5f38ef3fb8,
+                    ppns: [null, 0x119, null],
+                },
+                {
+                    attributes: {
+                        // Set the flags (RSW, DAGUXWRV) probabilistically on the PTE
+                        g: 0.5, // Float for probabilities
+                        u: 1, // 0 - 1 aren't probabilities
+                        x: 0.5, // Float for probabilities
+                        r: 1, // 0 - 1 aren't probabilities
+                        w: 0, // 0 - 1 aren't probabilities
+                    },
+                },
+            ],
+        },
+        {
+            repeats: 100, // How many times to make the test case
+            // Probabilistic fields:
+            same_va_pa: 0.1,
+            reuse_pte: 0.1,
+            aliasing: 0.1,
+            // VA and PA take the data
+            // va: 0x9930_1234,
+            // pa: 0x1423_1234,
+            ptes: [
+                {},
+                {
+                    // PTE entry -- set the address + the PPNs
+                    address: 0x7b5f38ef3fb8,
+                    ppns: [null, 0x119, null],
+                },
+                {
+                    attributes: {
+                        // Set the flags (RSW, DAGUXWRV) probabilistically on the PTE
+                        g: 0.5, // Float for probabilities
+                        u: 1, // 0 - 1 aren't probabilities
+                        x: 0.5, // Float for probabilities
+                        r: 1, // 0 - 1 aren't probabilities
+                        w: 0, // 0 - 1 aren't probabilities
+                    },
+                },
+            ],
+        },
+        {
+            repeats: 1, // How many times to make the test case
+            // Probabilistic fields:
+            // same_va_pa: 0.1,
+            // reuse_pte: 0.1,
+            // aliasing: 0.1,
+            // VA and PA take the data
+            // va: 0x9930_1234,
+            // pa: 0x1423_1234,
+            ptes: [
+                {},
+                {
+                    // PTE entry -- set the address + the PPNs
+                    ppns: [null, 0x119, null],
+                    // address: [0xcafe_babe_0, 0xdead_beef_0], // an array where a number should be = randomly choose a value from the array
+                },
+                {
+                    attributes: {
+                        // Set the flags (RSW, DAGUXWRV) probabilistically on the PTE
+                        g: 0.5, // Float for probabilities
+                        u: 1, // 0 - 1 aren't probabilities
+                        x: 0.5, // Float for probabilities
+                        r: 1, // 0 - 1 aren't probabilities
+                        w: 0, // 0 - 1 aren't probabilities
+                    },
+                },
+            ],
+        },
+    ],
+}
+/*
+    ],
+}
+*/
