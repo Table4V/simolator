@@ -54,10 +54,10 @@ def equate(x: int, y: int, nbits: int) -> Tuple[int, int]:
         x = randbits(nbits)
         y = x
         return x, y
-    elif x is not None:
+    elif y is None:
         y = x
         return x, y
-    elif y is not None:
+    elif x is None:
         x = y
         return x, y
     elif x == y:
