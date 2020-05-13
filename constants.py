@@ -14,6 +14,9 @@ MAX_PA_MAP = {
     48: 2**56
 }
 
+OFFSET = 12
+PAGE_SHIFT = 12
+
 PA_BITS = {32: 34, 39: 56, 48: 56}
 
 MODE_PAGESIZE_LEVEL_MAP = {

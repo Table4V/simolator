@@ -16,6 +16,7 @@ from core_types import PA, PTE, SATP, VA
 from constants import PT_LEVEL_MAP, MAX_PA_MAP, MODE_PAGESIZE_LEVEL_MAP, PA_BITS
 from NewTranslator import TranslationWalk
 
+from ConstraintResolver import ConstraintResolver
 
 class ContextManager:
     '''
@@ -77,6 +78,7 @@ class ContextManager:
         self.satps: List[SATP] = []
         self.reference_counter = defaultdict(int)
         self.va_reference_counter = defaultdict(int)
+        self.CR = ConstraintResolver(mode=mode, memory_size=self.memory_size)
 
     def add_walk(self, pagesize: str, va: VA, pa: PA, ptes: List[PTE], satp: SATP):
         '''
@@ -85,7 +87,7 @@ class ContextManager:
         Registers the relevant components in all the relevant lookup tables.
         '''
         walk = TranslationWalk(self.mode, pagesize, satp, va, pa, ptes)
-        walk.resolve(pte_hashmap=self.ptes)
+        walk.resolve(CR=self.CR, pte_hashmap=self.ptes)
         self.vas[va.data()] = va
         self.address_table[pa.data()] = pa
         self.pas[pa.data()] = pa
@@ -178,7 +180,7 @@ class ContextManager:
 
         print('ContextManager Trace')
         print(
-            f'Mode: {self.mode}, MemSize: {self.memory_size:#x} (={addr_to_memsize(self.memory_size)}). Maximum VA = {2**self.mode:#0x}'
+            f'Mode: {self.mode}, MemSize: {self.memory_size:#x} (={addr_to_memsize(self.memory_size)}). Max VA = {2**self.mode:#0x}'
         )
         print()
 

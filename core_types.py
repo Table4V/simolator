@@ -6,6 +6,7 @@ import math
 
 DEFAULT_FORMAT = 'b'
 
+
 class InvalidXWR(Exception):
     pass  # this may be worth moving to a warning if we foresee this being valid?
 
@@ -131,34 +132,6 @@ class PTE:
             self.ppn[i] = ppn & mask(width)
             ppn >>= width  # shift off the bits that've been assigned
 
-        # self.set(level, 0, 0, mode, False)
-
-    # def set(self, level, address, data, save=True):
-        # self.level = level
-        # # self.mode = mode
-        # if address not in PageTable:
-        #     self.address = address
-        #     self.attributes.set(data & 0x3FF)
-
-        #     if self.mode == 32:
-        #         self.ppn.append((data >> 10) & 0x3FF)
-        #         self.ppn.append((data >> 20) & 0xFFF)
-        #     if self.mode == 39:
-        #         self.ppn.append((data >> 10) & 0x1FF)
-        #         self.ppn.append((data >> 19) & 0x1FF)
-        #         self.ppn.append((data >> 28) & 0x3FFFFFF)
-        #     if self.mode == 48:
-        #         self.ppn.append((data >> 10) & 0x1FF)
-        #         self.ppn.append((data >> 19) & 0x1FF)
-        #         self.ppn.append((data >> 28) & 0x1FF)
-        #         self.ppn.append((data >> 37) & 0x1FFFF)
-        #     if save:
-        #         PageTable[self.address] = self
-        # elif PageTable[address].data() == data:
-        #     self.address = PageTable[address].address
-        #     self.attributes = PageTable[address].attributes
-        #     self.ppn = PageTable[address].ppn
-
     @property
     def finalize_random(self):
         for i, bits in enumerate(self.widths):
@@ -229,6 +202,7 @@ class PTE:
         ppn_digits = num_hex_digits(self.content_bits)
         addr_digits = num_hex_digits(self.address_bits)
         return f'@{safe_to_hex(self.address, addr_digits)} -> {safe_to_hex(self.get_ppn(), ppn_digits)} ({self.attributes})'
+
 
 class VA:
     vpn = []
@@ -326,7 +300,7 @@ class PA:
     ppn = []
     offset = None
     mode = 0
-    
+
     def __init__(self, data=None, mode=32, isLoad=False):
         if isLoad:
             return
@@ -391,4 +365,3 @@ class PA:
             val_line = f'|{vs}{val_line}'
 
         return f'{header}\n{display_line}\n{val_line}'
-        
