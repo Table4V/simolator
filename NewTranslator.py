@@ -86,6 +86,7 @@ def resolve_pte_addr(pte: PTE, addr: int, start_level: int = 0) -> int:
         addr_val = addr & mask(bits) if addr != None else None
         pte.ppn[i], addr_val = equate(pte.ppn[i], addr_val, bits)
         result_address |= (addr_val << offset)
+        addr = addr >> bits if addr != None else None
         offset += bits
     return result_address << PAGE_SHIFT
 
@@ -231,26 +232,36 @@ class TranslationWalk:
             self.endLevel = 0 if (pageSize == '4K') else 1 if (pageSize == '2M') else 2 if (pageSize == '1G') else 3
         return self.endLevel
 
-    def resolve(self):
+    def resolve(self, pte_hashmap: Union[dict, None] = None):
         '''
         Resolve the Translation Walk, satisfying all set parameters, and filling in randomly where appropriate.
 
         We're going to use the triad method:
         [SATP PPN, VPN(top) --> Addr(top)]
         [PTE(i), PPN(i) -> Addr(i-1)]
+        Pass a PTE hashmap for it to find already defined variables
         '''
+
+        pte_hashmap = pte_hashmap or {}
 
         CR = ConstraintResolver(mode=self.mode)
         # First: Deal with SATP one
         self.ptes[0].address = CR.resolve(self.satp, self.va, self.ptes[0].address, self.startLevel)
+        if self.ptes[0].address in pte_hashmap.keys():
+            self.ptes[0] = pte_hashmap[self.ptes[0].address]
 
         # Intermediate PTEs
         for index, level in enumerate(range(self.startLevel - 1, self.endLevel - 1, -1)):
             self.ptes[index + 1].address = CR.resolve(self.ptes[index], self.va, self.ptes[index + 1].address, level)
-            self.ptes[index].set_pointer()
+            if self.ptes[index + 1].address in pte_hashmap.keys():
+                self.ptes[index + 1] = pte_hashmap[self.ptes[index + 1].address]
+            else:
+                self.ptes[index].set_pointer()
 
         # handle the leaf
         CR.resolve_leaf(self.ptes[-1], self.va, self.pa, self.endLevel)
+        if self.ptes[-1].address in pte_hashmap.keys():
+            self.ptes[-1] = pte_hashmap[self.ptes[-1].address]
         assert self.va.data() != None, self.display()
         # self.ptes[-1].broadcast_ppn(ppn)
         # self.pa.set(phys_ppn, mode=self.mode)
@@ -266,4 +277,3 @@ class TranslationWalk:
 
         print('------------------------------------------------------------------------')
         print()
-

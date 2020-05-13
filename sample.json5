@@ -6,7 +6,7 @@
     test_cases: [
         { repeats: 4 },
         {
-            repeats: 1, // How many times to make the test case
+            repeats: 4, // How many times to make the test case
             // Probabilistic fields:
             // same_va_pa: 0.05,
             // // reuse_pte: 0.05,
@@ -17,7 +17,7 @@
             ptes: [
                 {
                     // PTE entry -- set the address + the PPNs
-                    address: 0xcafebabe0,
+                    address: 0x12399ff000,
                     // ppns: [null, 0x119, null],
                 },
                 {},
@@ -38,21 +38,33 @@
             same_va_pa: 1,
         },
         {
-            repeats: 4,
+            repeats: 2,
             aliasing: 1,
+            reuse_pte: 1
         },
         {
             pagesize: '2M',
         },
         {
-            reuse_satp: 1,
+            repeats: 4,
             ptes: [
                 {},
                 {
                     // PTE entry -- set the address + the PPNs
+                    // Something is going wrong with midlevel PTEs
                     address: [0xdeadbeef0, 0xcafebabe0],
-                    ppns: [null, 0x119, null],
                 },
+                {},
+            ],
+        },
+        {
+            repeats: 4,
+            ptes: [
+                {
+                    // PTE entry -- set the address + the PPNs
+                    address: [0xdeadbeef0, 0xcafebabe0],
+                },
+                {},
                 {},
             ],
         },
