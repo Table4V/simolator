@@ -121,8 +121,7 @@ class ConstraintResolver:
         '''
         offset = 0
         result_address = 0
-        addr = addr >> PAGE_SHIFT if addr != None else None
-
+        # addr = addr >> PAGE_SHIFT if addr != None else None
         for i, (bits, addr_val, randomized_value) in enumerate(
                 zip(pte.widths, self._chunk_address(addr), self._chunk_random_pa_address())):
             pte.ppn[i], addr_val = equate(pte.ppn[i], addr_val, randomized_value)

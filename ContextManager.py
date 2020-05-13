@@ -73,6 +73,7 @@ class ContextManager:
         self.vas = {}
         self.pas = {}
         self.ptes = {}
+        # self.leaves = {}
         self.walks: List[TranslationWalk] = []
         self.levels = PT_LEVEL_MAP[mode]
         self.satps: List[SATP] = []
@@ -96,6 +97,8 @@ class ContextManager:
             self.address_table[pte.address] = pte
             self.ptes[pte.address] = pte
             self.reference_counter[pte.address] += 1
+        # The last one is a leaf, mark that
+        # self.leaves[pte.address] = pte
         self.walks.append(walk)
         self.reference_counter[pa.data()] += 1
         self.va_reference_counter[va.data()] += 1
@@ -107,6 +110,9 @@ class ContextManager:
         Probabilities from 0 to 1 (float).
         '''
         # Step one: create and load everything from the test case
+
+        if (type(pagesize) == list):
+            pagesize = random.choice(pagesize)
         
         if resolve_flag(aliasing):  # reuse an existing PA in the system
             pa_addr = random.sample(self.pas.keys(), 1)[0]
@@ -144,10 +150,23 @@ class ContextManager:
         reuse_pte = resolve_flag(reuse_pte)
         if reuse_pte:  # for now: not allowed with specifying PTE data
             reuse_index = random.randint(0, self.num_ptes(pagesize) - 1)
-            random_pte_addr = random.sample(self.ptes.keys(), 1)[0]  # sample 1 allows using the generator
-            ptes[reuse_index] == self.ptes[random_pte_addr]
+            # reuse_index = 2
+            take_from = random.choice(self.walks)
+            random_pte_addr = take_from.ptes[reuse_index].address
+            ptes[reuse_index] = self.ptes[random_pte_addr]
+
+            # if reuse_index == 0:
+            #     random_pte_addr = random.sample(self.leaves.keys(), 1)[0]
             # else:
-            #     ptes[i] = PTE(mode=self.mode)
+            #     for i in range(10):
+            #         random_pte_addr = random.sample(self.ptes.keys(), 1)[0]
+            #         print(random_pte_addr)
+            #         if random_pte_addr not in self.leaves.keys():
+            #             break
+            #     else:
+            #         raise RuntimeError("Could not find a non-leaf")
+            #     print(f'picked {random_pte_addr:#x}, {reuse_index}')
+        
         elif kwargs.get('ptes'):
             for i, pte_attrs in enumerate(kwargs.get('ptes')):
                 address = resolve_int(pte_attrs.get('address'))
@@ -165,11 +184,10 @@ class ContextManager:
 
         # inialize all remaining undefined PTEs
         for i in range(len(ptes)):
-            if not ptes[i]:
+            if ptes[i] == None:
                 ptes[i] = PTE(mode=self.mode)
-
         self.add_walk(pagesize, va, pa, ptes, satp)
-
+        
     def dump(self, filename: str):
         ''' Export the full things to a JSON '''
         with open(filename, 'w') as f:

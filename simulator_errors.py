@@ -17,7 +17,7 @@ class UnalignedAddress(Exception):
 
 from enum import Enum
 
-class Errors(Enum):
+class Errors:
     '''
     Errors for the simulator class.
     These focus on errors that aren't about undefined runtime behavior but rather about invalid logic, addresses, too many constraints, etc.

@@ -98,7 +98,9 @@ class TranslationWalk:
         CR.resolve_leaf(self.ptes[-1], self.va, self.pa, self.endLevel)
         if self.ptes[-1].address in pte_hashmap.keys():
             self.ptes[-1] = pte_hashmap[self.ptes[-1].address]
-        assert self.va.data() != None, self.display()
+
+        
+        # assert self.va.data() != None, self.display()
         # self.ptes[-1].broadcast_ppn(ppn)
         # self.pa.set(phys_ppn, mode=self.mode)
         # self.va.set_big_page(self.endLevel, offset)
