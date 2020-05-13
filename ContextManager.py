@@ -8,7 +8,7 @@ from typing import List, Tuple, Union
 from collections import defaultdict
 import json5
 import json
-from sty import fg
+from sty import fg, bg
 
 from utils import safe_to_bin, rsetattr, rgetattr, addr_to_memsize, num_hex_digits
 from typeutils import resolve_flag, resolve_int
@@ -50,6 +50,9 @@ class ContextManager:
         ppn_width = num_hex_digits(walk.satp.ppn_width)
         pa_str = self._format_pa(walk.pa.data(), color)
         va_str = self._format_va(walk.va.data(), color)
+        if color and walk.pa.data() == walk.va.data(): # Color PA = VA blue bg
+            pa_str = bg.cyan + pa_str + bg.rs
+            va_str = bg.cyan + va_str + bg.rs
         pte_entries = ' '.join([self._format_pa(x.address, color) for x in walk.ptes])
         pte_str = f'=>{pte_entries} {walk.ptes[-1].get_ppn():#0{ppn_width}x}'
         base = f'SATP: {walk.satp.ppn:#0{ppn_width}x} VA: {va_str} -> [{pte_str}] -> {pa_str}'
@@ -101,17 +104,32 @@ class ContextManager:
         Made in a way that in the future passing JSON into it will be easy. (Through the kwargs)
         Probabilities from 0 to 1 (float).
         '''
-
         # Step one: create and load everything from the test case
+        
+        if resolve_flag(aliasing):  # reuse an existing PA in the system
+            pa_addr = random.sample(self.pas.keys(), 1)[0]
+            pa = self.pas[pa_addr]
+        elif pa in self.pas.keys():
+            pa = self.pas[pa]
+        else:
+            pa = PA(mode=self.mode, data=pa)
+
+        if resolve_flag(same_va_pa) and pa.data():
+            va = pa.data()
+        
         if va in self.vas.keys():
             va = self.vas[va]
         else:
             va = VA(mode=self.mode, data=va)
-        
-        if pa in self.pas.keys():
-            pa = self.pas[pa]
-        else:
-            pa = PA(mode=self.mode, data=pa)
+
+        if resolve_flag(same_va_pa):  # same VA and PA
+            if pa.data() and va.data():
+                pass
+            elif pa.data():
+                va.set(pa.data())
+            else: # TODO: bounds checking!
+                va.set(self.random_address())
+                pa.set(va.data())
         
         reuse_satp = resolve_flag(kwargs.get('reuse_satp'))
         if reuse_satp:
@@ -119,18 +137,6 @@ class ContextManager:
         else:
             satp = SATP(mode=self.mode, asid=kwargs.get('satp.asid', 0), ppn=kwargs.get('satp.ppn'))
         
-        if resolve_flag(aliasing):  # reuse an existing PA in the system
-            pa_addr = random.sample(self.pas.keys(), 1)[0]
-            pa = self.pas[pa_addr]
-        else:
-            pa = PA(mode=self.mode)
-
-        if resolve_flag(same_va_pa):  # same VA and PA
-            if pa.data():
-                va.set(pa.data())
-            else:
-                va.set(self.random_address())
-                pa.set(va.data())
 
         ptes = [None] * self.num_ptes(pagesize)
         reuse_pte = resolve_flag(reuse_pte)
