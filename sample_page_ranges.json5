@@ -1,0 +1,20 @@
+{
+    // comments
+    mode: 48, // Sv48
+    // Sample JSON for running test cases
+    // memory_size: 0x9000000000, // 576 GiB
+    // lower_bound: 0x2000000000, // Start addresses from at least here
+    test_cases: [
+        {
+            page_range: {
+                start: 0x1000,
+                num_pages: 1000,
+                // end: 0x9000000, // can also be done as area
+                // step: 0x1000, // you can step instead of using the pagesize
+            },
+            "satp.ppn": 0xcafebabe,
+            pagesize: ['1G', '2M', '4K'],
+            // same_va_pa: 1 // This with pagesize mixed will almost certainly cause a failure
+        }
+    ],
+}

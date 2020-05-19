@@ -306,7 +306,7 @@ class PA:
             return
         self.mode = mode
         if data:
-            self.set(data, mode)
+            self.set(data)
             self.isEmpty = False
         else:
             self.ppn = [None for i in self.widths if i != None]

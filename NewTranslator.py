@@ -26,31 +26,31 @@ PAGE_SHIFT = 12
 
 
 class TranslationWalk:
-    pageSize = '4K'
+    pagesize = '4K'
     # va = VA()
     ptes = []
     # pa = PA()
     startLevel = 3
     endLevel = 0
 
-    # TODO: check pageSize valid
+    # TODO: check pagesize valid
     def __init__(self,
                  mode=None,
-                 pageSize=None,
+                 pagesize=None,
                  satp: SATP = None,
                  va: VA = None,
                  pa: PA = None,
                  ptes: List[PTE] = None):
         self.mode = mode
-        self.pageSize = pageSize
+        self.pagesize = pagesize
         self.satp = satp
         self.va = va
         self.pa = pa
         self.ptes = ptes
-        self.startLevel = self.calculateStartLevel(mode, pageSize)
-        self.endLevel = self.calculateEndLevel(mode, pageSize)
+        self.startLevel = self.calculateStartLevel(mode, pagesize)
+        self.endLevel = self.calculateEndLevel(mode, pagesize)
 
-    def calculateStartLevel(self, mode, pageSize):
+    def calculateStartLevel(self, mode, pagesize):
         if mode == 32:
             self.startLevel = 1
         if mode == 39:
@@ -59,13 +59,13 @@ class TranslationWalk:
             self.startLevel = 3
         return self.startLevel
 
-    def calculateEndLevel(self, mode, pageSize):
+    def calculateEndLevel(self, mode, pagesize):
         if mode == 32:
-            self.endLevel = 0 if (pageSize == '4K') else 1
+            self.endLevel = 0 if (pagesize == '4K') else 1
         if mode == 39:
-            self.endLevel = 0 if (pageSize == '4K') else 1 if (pageSize == '2M') else 2
+            self.endLevel = 0 if (pagesize == '4K') else 1 if (pagesize == '2M') else 2
         if mode == 48:
-            self.endLevel = 0 if (pageSize == '4K') else 1 if (pageSize == '2M') else 2 if (pageSize == '1G') else 3
+            self.endLevel = 0 if (pagesize == '4K') else 1 if (pagesize == '2M') else 2 if (pagesize == '1G') else 3
         return self.endLevel
 
     def resolve(self, CR: ConstraintResolver, pte_hashmap: Union[dict, None] = None):
@@ -108,7 +108,7 @@ class TranslationWalk:
     def display(self, format_code='x'):
         ''' Print the whole thingy out very nicely '''
         print('------------------------------------------------------------------------')
-        print(f'Translation Walk: Mode=Sv{self.mode}, PageSize={self.pageSize}')
+        print(f'Translation Walk: Mode=Sv{self.mode}, PageSize={self.pagesize}')
 
         for stage in [self.satp, self.va, *self.ptes, self.pa]:
             print(format(stage, format_code))

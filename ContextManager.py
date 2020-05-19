@@ -10,10 +10,11 @@ import json5
 import json
 from sty import fg, bg
 
+from simulator_errors import Errors
 from utils import safe_to_bin, rsetattr, rgetattr, addr_to_memsize, num_hex_digits
 from typeutils import resolve_flag, resolve_int
 from core_types import PA, PTE, SATP, VA
-from constants import PT_LEVEL_MAP, MAX_PA_MAP, MODE_PAGESIZE_LEVEL_MAP, PA_BITS
+from constants import PT_LEVEL_MAP, MAX_PA_MAP, MODE_PAGESIZE_LEVEL_MAP, PA_BITS, PAGESIZE_INT_MAP
 from NewTranslator import TranslationWalk
 
 from ConstraintResolver import ConstraintResolver
@@ -199,7 +200,7 @@ class ContextManager:
     def __repr__(self):
         return f'<ContextManager: Sv{self.mode}, Memory Bounds: {self.lower_bound:0x}-{self.memory_size:0x}>'
 
-    def print_dump(self):
+    def print_dump(self, full_dump=False):
         satp_digits = num_hex_digits(44 if self.mode != 32 else 22) + 2
 
         print('ContextManager Trace')
@@ -207,28 +208,28 @@ class ContextManager:
             f'Mode: {self.mode}, MemSize: {self.memory_size:#x} (={addr_to_memsize(self.memory_size)}). Max VA = {2**self.mode - 1:#0x}'
         )
         print()
+        if full_dump:
+            print('Virtual Addresses:')
+            va_digits = num_hex_digits(self.mode) + 2  # account for the 0x taking up space
+            for i, va_address in enumerate(self.vas.keys()):
+                print(f'{i}\t{va_address:#0{va_digits}x}')
+            print()
 
-        print('Virtual Addresses:')
-        va_digits = num_hex_digits(self.mode) + 2  # account for the 0x taking up space
-        for i, va_address in enumerate(self.vas.keys()):
-            print(f'{i}\t{va_address:#0{va_digits}x}')
-        print()
+            print('Physical Addresses:')
+            pa_digits = num_hex_digits(PA_BITS[self.mode]) + 2
+            for i, pa_address in enumerate(self.pas.keys()):
+                print(f'{i}\t{pa_address:#0{pa_digits}x}')
+            print()
 
-        print('Physical Addresses:')
-        pa_digits = num_hex_digits(PA_BITS[self.mode]) + 2
-        for i, pa_address in enumerate(self.pas.keys()):
-            print(f'{i}\t{pa_address:#0{pa_digits}x}')
-        print()
+            print('PTEs:')
+            for i, pte in enumerate(self.ptes.values()):
+                print(f'{i}\t{pte.ministring()}')
+            print()
 
-        print('PTEs:')
-        for i, pte in enumerate(self.ptes.values()):
-            print(f'{i}\t{pte.ministring()}')
-        print()
-
-        print('SATPs:')
-        for i, satp in enumerate(self.satps):
-            print(f'{i}\t{satp.ppn:#0{satp_digits}x}')
-        print()
+            print('SATPs:')
+            for i, satp in enumerate(self.satps):
+                print(f'{i}\t{satp.ppn:#0{satp_digits}x}')
+            print()
 
         print('Walks:')
         for i, walk in enumerate(self.walks):
@@ -246,7 +247,29 @@ def ContextManagerFromJSON(filename: str) -> ContextManager:
     test_cases = params.get('test_cases', [])
 
     for test_case in test_cases:
-        for i in range(test_case.get('repeats', 1)):
-            mgr.add_test_case(**test_case)
+        if rg := test_case.get('page_range'): # Walrus
+            # We do a  mapping of the first page address
+            start = rg.get('start', mgr.lower_bound)
+            end   = rg.get('end', mgr.memory_size)
+            step  = rg.get('step', None)
+            num_pages = rg.get('num_pages', None)
+            
+            current_addr = start
+            n_iters = 0
+            while current_addr < end and (num_pages is None or n_iters < num_pages):
+                for i in range(5): # how many failures we will try before we give up
+                    try:
+                        mgr.add_test_case(**test_case, pa=current_addr)
+                        break
+                    except (Errors.InvalidBigPage, Errors.InvalidConstraints):
+                        pass
+                else:
+                    raise Errors.InvalidConstraints(f"Couldn't satisfy constraints after {i+1} tries")
+                current_addr += step or PAGESIZE_INT_MAP[mgr.walks[-1].pagesize]
+                n_iters += 1
+
+        else:
+            for i in range(test_case.get('repeats', 1)):
+                mgr.add_test_case(**test_case)
 
     return mgr

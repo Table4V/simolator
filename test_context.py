@@ -1,5 +1,8 @@
+#!/usr/bin/python3
 from ContextManager import ContextManager, ContextManagerFromJSON
+import sys
 
-mgr = ContextManagerFromJSON('simpler_sample.json5')
+fn = sys.argv[1]
+mgr = ContextManagerFromJSON(fn)
 
 mgr.print_dump()

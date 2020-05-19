@@ -37,3 +37,4 @@ MODE_PAGESIZE_LEVEL_MAP = {
         '512G': 3
     },
 }
+PAGESIZE_INT_MAP = {'4K': 2**12, '2M': 2**22, '4M': 2**24, '1G': 2**30, '512G': 2**39}
