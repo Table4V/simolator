@@ -198,7 +198,7 @@ class ContextManager:
 
         print('ContextManager Trace')
         print(
-            f'Mode: {self.mode}, MemSize: {self.memory_size:#x} (={addr_to_memsize(self.memory_size)}). Max VA = {2**self.mode:#0x}'
+            f'Mode: {self.mode}, MemSize: {self.memory_size:#x} (={addr_to_memsize(self.memory_size)}). Max VA = {2**self.mode - 1:#0x}'
         )
         print()
 
