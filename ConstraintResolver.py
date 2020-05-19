@@ -41,9 +41,10 @@ class ConstraintResolver:
 
     Change: support memory bounds
     '''
-    def __init__(self, mode: int, memory_size: int):
+    def __init__(self, mode: int, memory_size: int, lower_bound: int = 0):
         self.mode = mode
         self.memory_size = memory_size
+        self.lower_bound = lower_bound
 
     @property
     def pte_ppn_widths(self) -> List[int]:
@@ -78,7 +79,7 @@ class ConstraintResolver:
     def _random_pa_address(self) -> int:
         ''' Get a random PA in the memory range '''
         # TODO: maybe incorporate check that it is free?
-        return random.randint(0, self.memory_size - 1)
+        return random.randint(self.lower_bound, self.memory_size - 1)
 
     def _chunk_address(self, address: NullableInt, trim_offset: bool = True) -> Union[List[int], List[None]]:
         ''' Break up the number to a list according to the PTE PPN widths '''

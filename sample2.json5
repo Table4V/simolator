@@ -3,6 +3,7 @@
     mode: 48, // Sv48
     // Sample JSON for running test cases
     memory_size: 0x3000000000, // 192 GB
+    lower_bound: 0x2000000000, // Start addresses from at least here
     test_cases: [
         {
             repeats: 4, // How many times to make this kind of test case
@@ -27,6 +28,7 @@
             reuse_pte: 0.5, // Reuse a previously defined PTE 50% of the time
         },
         {
+            reuse_satp: true,
             repeats: 4,
             ptes: [
                 {},
@@ -51,7 +53,6 @@
         },
         {
             repeats: 2,
-            reuse_satp: true,
             // Specifying an entire path
             ptes: [
                 { address: 0x00001452876690 },
@@ -87,7 +88,11 @@
         },
         {
             repeats: 5,
-            pagesize: '4K', // Cases
+            pagesize: '512G', // Cases can be set to a different pagesize
+        },
+        {
+            repeats: 5,
+            pagesize: ['512G', '1G', '2M'], // Cases can also be set to randomly choose one from a list
         }
     ],
 }

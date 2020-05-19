@@ -18,12 +18,14 @@ from NewTranslator import TranslationWalk
 
 from ConstraintResolver import ConstraintResolver
 
+NullableInt = Union[int, None]
+
 class ContextManager:
     '''
     Hold our data, and make special & probabilistic test cases
     '''
     def random_address(self):
-        return random.randint(0, self.memory_size - 1)
+        return random.randint(self.lower_bound, self.memory_size - 1)
 
     def valid_address(self, value):
         return value < self.memory_size
@@ -59,7 +61,7 @@ class ContextManager:
         base = f'SATP: {walk.satp.ppn:#0{ppn_width}x} VA: {va_str} -> [{pte_str}] -> {pa_str}'
         return base
 
-    def __init__(self, memory_size: Union[int, None], mode: int):
+    def __init__(self, memory_size: Union[int, None], mode: int, lower_bound: int = 0):
         ''' Initialize a ContextManager.
         params:
         size of memory (= the max physical address allowed in the simulation + 1)
@@ -67,6 +69,7 @@ class ContextManager:
         '''
         # TODO: add stuff to classes for bounded randomness issues.
         self.memory_size = memory_size or MAX_PA_MAP[mode]  # 0 is not supported here (duh)
+        self.lower_bound = lower_bound
         self.mode = mode
         self.address_table = {
         }  # we'll use this to keep track of PTEs & PAs that have already been allocated and their physical addresses
@@ -79,7 +82,7 @@ class ContextManager:
         self.satps: List[SATP] = []
         self.reference_counter = defaultdict(int)
         self.va_reference_counter = defaultdict(int)
-        self.CR = ConstraintResolver(mode=mode, memory_size=self.memory_size)
+        self.CR = ConstraintResolver(mode=mode, memory_size=self.memory_size, lower_bound=self.lower_bound)
 
     def add_walk(self, pagesize: str, va: VA, pa: PA, ptes: List[PTE], satp: SATP):
         '''
@@ -193,6 +196,9 @@ class ContextManager:
         with open(filename, 'w') as f:
             json.dump(self, f, default=lambda x: x.__dict__)
 
+    def __repr__(self):
+        return f'<ContextManager: Sv{self.mode}, Memory Bounds: {self.lower_bound:0x}-{self.memory_size:0x}>'
+
     def print_dump(self):
         satp_digits = num_hex_digits(44 if self.mode != 32 else 22) + 2
 
@@ -235,7 +241,7 @@ def ContextManagerFromJSON(filename: str) -> ContextManager:
     with open(filename) as f:
         params = json5.load(f)
 
-    mgr = ContextManager(params.get('memory_size'), params.get('mode'))
+    mgr = ContextManager(params.get('memory_size'), params.get('mode'), params.get('lower_bound', 0))
 
     test_cases = params.get('test_cases', [])
 
