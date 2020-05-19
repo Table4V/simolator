@@ -8,18 +8,21 @@ from typing import List, Tuple, Union
 from collections import defaultdict
 import json5
 import json
-from sty import fg, bg
+from sty import fg, bg, ef, RgbBg, rs
 
 from simulator_errors import Errors
-from utils import safe_to_bin, rsetattr, rgetattr, addr_to_memsize, num_hex_digits
+from utils import safe_to_bin, safe_to_hex, rsetattr, rgetattr, addr_to_memsize, num_hex_digits
 from typeutils import resolve_flag, resolve_int
 from core_types import PA, PTE, SATP, VA
 from constants import PT_LEVEL_MAP, MAX_PA_MAP, MODE_PAGESIZE_LEVEL_MAP, PA_BITS, PAGESIZE_INT_MAP
-from NewTranslator import TranslationWalk
+from NewTranslator import TranslationWalk, InvalidTranslationWalk
 
 from ConstraintResolver import ConstraintResolver
 
 NullableInt = Union[int, None]
+
+bg.set_style('orange', RgbBg(255, 150, 50))
+
 
 class ContextManager:
     '''
@@ -35,6 +38,8 @@ class ContextManager:
         return self.levels - MODE_PAGESIZE_LEVEL_MAP[self.mode][pagesize]
 
     def _format_va(self, va_addr: int, colorterm=True):
+        if va_addr is None:
+            return '***'
         va_digits = num_hex_digits(self.mode)
         va_str = f'{va_addr:#0{va_digits}x}'
         if colorterm and self.va_reference_counter[va_addr] > 1:
@@ -42,15 +47,38 @@ class ContextManager:
         return va_str
 
     def _format_pa(self, pa_addr: int, colorterm=True):
+        if pa_addr is None:
+            return '***'
         pa_digits = num_hex_digits(PA_BITS[self.mode])
         pa_str = f'{pa_addr:#0{pa_digits}x}'
         if colorterm and self.reference_counter[pa_addr] > 1:
             return fg.red + pa_str + fg.rs
         return pa_str
 
-    def _tw_ministring(self, walk: TranslationWalk, color=True) -> str:
+    def _tw_ministring_err(self, walk: InvalidTranslationWalk, color=True) -> str:
+        ppn_width = num_hex_digits(walk.satp.ppn_width)
+        # pa_str = self._format_pa(walk.pa.data(), color)
+        va_str = self._format_va(walk.va.data(), color) + fg.black
+        # if color and walk.pa.data() == walk.va.data(): # Color PA = VA blue bg
+        #     pa_str = bg.cyan + pa_str + bg.rs
+        #     va_str = bg.cyan + va_str + bg.rs
+        pte_entries = ' '.join([self._format_pa(x.address, color) for x in walk.ptes])
+        if walk.ptes[-1].get_ppn() is None:
+            final_ppn = '???'
+        else:
+            final_ppn = f'{walk.ptes[-1].get_ppn():#0{ppn_width}x}'
+        pte_str = f'=>{pte_entries} {final_ppn}'
+        err = fg.red + f' INVALID: {walk.error_type}  ' + fg.black
+        base = f'SATP: {walk.satp.ppn:#0{ppn_width}x} VA: {va_str} -> [{pte_str}] {err}'
+        # return f'{bg.orange} + {fg.black} + {base} + {fg.rs} + {bg.rs}'
+        return bg.orange + fg.black + base + fg.rs + bg.rs
+
+
+    def _tw_ministring(self, walk: Union[TranslationWalk, InvalidTranslationWalk], color=True) -> str:
         ''' Return a compact one-line representation of the walk '''
         # satp_ppn_digits = num_to44 if walk.mode != 32 else 22
+        if type(walk) == InvalidTranslationWalk:
+            return self._tw_ministring_err(walk, color)
         ppn_width = num_hex_digits(walk.satp.ppn_width)
         pa_str = self._format_pa(walk.pa.data(), color)
         va_str = self._format_va(walk.va.data(), color)
@@ -58,7 +86,8 @@ class ContextManager:
             pa_str = bg.cyan + pa_str + bg.rs
             va_str = bg.cyan + va_str + bg.rs
         pte_entries = ' '.join([self._format_pa(x.address, color) for x in walk.ptes])
-        pte_str = f'=>{pte_entries} {walk.ptes[-1].get_ppn():#0{ppn_width}x}'
+        final_ppn = f'{walk.ptes[-1].get_ppn():#0{ppn_width}x}'
+        pte_str = f'=>{pte_entries} {final_ppn}'
         base = f'SATP: {walk.satp.ppn:#0{ppn_width}x} VA: {va_str} -> [{pte_str}] -> {pa_str}'
         return base
 
@@ -106,6 +135,31 @@ class ContextManager:
         self.walks.append(walk)
         self.reference_counter[pa.data()] += 1
         self.va_reference_counter[va.data()] += 1
+    
+    def add_invalid_walk(self, pagesize: str, va: VA, pa: PA, ptes: List[PTE], satp: SATP):
+        '''
+        Add a translation walk to the context.
+        Meant for when it's been specced out already.
+        Registers the relevant components in all the relevant lookup tables.
+        '''
+        walk = InvalidTranslationWalk(self.mode, pagesize, satp, va, pa, ptes)
+        walk.resolve(CR=self.CR, pte_hashmap=self.ptes)
+        if va.data():
+            self.vas[va.data()] = va
+            self.va_reference_counter[va.data()] += 1
+        # self.address_table[pa.data()] = pa
+        # self.pas[pa.data()] = pa
+        self.satps.append(satp)
+        for pte in ptes:
+            if pte.address:
+                # may need more checks in terms of marking things
+                self.address_table[pte.address] = pte 
+                self.ptes[pte.address] = pte
+                self.reference_counter[pte.address] += 1
+        # The last one is a leaf, mark that
+        # self.leaves[pte.address] = pte
+        self.walks.append(walk)
+        # self.reference_counter[pa.data()] += 1
 
     def add_test_case(self, same_va_pa: float = 0, reuse_pte: float = 0, aliasing: float = 0, pagesize='4K', va=None, pa=None, **kwargs):
         '''
@@ -179,7 +233,7 @@ class ContextManager:
                 else:
                     ptes[i] = PTE(mode=self.mode)
                     ptes[i].address = address
-                    ptes[i].ppns = pte_attrs.get('ppns')
+                    ptes[i].ppn = pte_attrs.get('ppns')
 
                 flags = pte_attrs.get('attributes', {})
 
@@ -190,7 +244,39 @@ class ContextManager:
         for i in range(len(ptes)):
             if ptes[i] == None:
                 ptes[i] = PTE(mode=self.mode)
-        self.add_walk(pagesize, va, pa, ptes, satp)
+
+        if errs := kwargs.get('errors'):
+            err = False
+            # V = 0
+            if resolve_flag(errs.get('mark_invalid')):
+                err = True
+                ptes[-1].attributes.V = 0
+            # W=1, R=0, on the leaf
+            if resolve_flag(errs.get('write_no_read')):
+                err = True
+                ptes[-1].attributes.R = 0 
+                ptes[-1].attributes.W = 1
+            # Global mapping followed by G=0
+            if resolve_flag(errs.get('global_nonglobal')):
+                err = True
+                ptes[-2].attributes.G = 1 
+                ptes[-1].attributes.G = 0
+            # Leaf marked as pointer
+            if resolve_flag(errs.get('leaf_as_pointer')):
+                err = True
+                ptes[-1].attributes.R = 0 
+                ptes[-1].attributes.X = 0
+            # Superpage has data set
+            if resolve_flag(errs.get('uncleared_superpage')):
+                err = True
+                ptes[-1].ppn[0] = random.randint(10, 200)
+            
+            if err:
+                self.add_invalid_walk(pagesize, va, pa, ptes, satp)
+            else:
+                self.add_walk(pagesize, va, pa, ptes, satp)
+        else:
+            self.add_walk(pagesize, va, pa, ptes, satp)
         
     def dump(self, filename: str):
         ''' Export the full things to a JSON '''
@@ -261,7 +347,7 @@ def ContextManagerFromJSON(filename: str) -> ContextManager:
                     try:
                         mgr.add_test_case(**test_case, pa=current_addr)
                         break
-                    except (Errors.InvalidBigPage, Errors.InvalidConstraints):
+                    except (Errors.SuperPageNotCleared, Errors.InvalidConstraints):
                         pass
                 else:
                     raise Errors.InvalidConstraints(f"Couldn't satisfy constraints after {i+1} tries")

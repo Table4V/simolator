@@ -4,15 +4,9 @@ from utils import safe_to_bin, field_to_string, num_hex_digits, safe_to_hex
 from constants import PA_BITS
 import math
 
+from simulator_errors import Errors
+
 DEFAULT_FORMAT = 'b'
-
-
-class InvalidXWR(Exception):
-    pass  # this may be worth moving to a warning if we foresee this being valid?
-
-
-class InvalidDAU(Exception):
-    pass  # this may be worth moving to a warning if we foresee this being valid?
 
 
 class SATP:
@@ -156,6 +150,25 @@ class PTE:
         self.attributes.D = 0
         self.attributes.A = 0
         self.attributes.U = 0
+
+    def assert_pointer(self):
+        if self.leaf:
+            raise Errors.UnexpectedLeaf()
+
+    def assert_global(self, assertion: bool) -> bool:
+        if self.attributes.G:
+            return True
+        elif assertion:
+            raise Errors.NonGlobalAfterGlobal()
+        return False
+
+    def validate_leaf(self):
+        if self.attributes.V == 0:
+            raise Errors.PTEMarkedInvalid()
+        elif self.attributes.R == 0 and self.attributes.X == 0:
+            raise Errors.LeafMarkedAsPointer()
+        elif self.attributes.R == 0 and self.attributes.W == 1:
+            raise Errors.WriteNoReadError()
 
     def data(self):
         return None  # TODO: handle attrs so this can go trhough

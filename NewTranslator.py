@@ -17,6 +17,7 @@ from core_types import PA, VA, PTE, SATP
 from utils import num_hex_digits
 
 from ConstraintResolver import ConstraintResolver
+from simulator_errors import Errors
 
 arch = "RV32"
 PageTable = {}
@@ -28,7 +29,7 @@ PAGE_SHIFT = 12
 class TranslationWalk:
     pagesize = '4K'
     # va = VA()
-    ptes = []
+    # ptes: List[PTE] = []
     # pa = PA()
     startLevel = 3
     endLevel = 0
@@ -81,10 +82,14 @@ class TranslationWalk:
         pte_hashmap = pte_hashmap or {}
 
         # CR = ConstraintResolver(mode=self.mode)
+
+        global_flag = False # if this is set, then we need to assert that subsequent levels are marked as global, I think
         # First: Deal with SATP one
         self.ptes[0].address = CR.resolve(self.satp, self.va, self.ptes[0].address, self.startLevel)
         if self.ptes[0].address in pte_hashmap.keys():
             self.ptes[0] = pte_hashmap[self.ptes[0].address]
+
+            global_flag = self.ptes[0].assert_global(global_flag)
 
         # Intermediate PTEs
         for index, level in enumerate(range(self.startLevel - 1, self.endLevel - 1, -1)):
@@ -94,12 +99,16 @@ class TranslationWalk:
             else:
                 self.ptes[index].set_pointer()
 
+            global_flag = self.ptes[index].assert_global(global_flag)
+            self.ptes[index].assert_pointer()
+
         # handle the leaf
         CR.resolve_leaf(self.ptes[-1], self.va, self.pa, self.endLevel)
         if self.ptes[-1].address in pte_hashmap.keys():
             self.ptes[-1] = pte_hashmap[self.ptes[-1].address]
 
-        
+        self.ptes[-1].validate_leaf()
+        global_flag = self.ptes[-1].assert_global(global_flag)
         # assert self.va.data() != None, self.display()
         # self.ptes[-1].broadcast_ppn(ppn)
         # self.pa.set(phys_ppn, mode=self.mode)
@@ -115,3 +124,26 @@ class TranslationWalk:
 
         print('------------------------------------------------------------------------')
         print()
+
+
+class InvalidTranslationWalk(TranslationWalk):
+    def __init__(self, mode=None, pagesize=None, satp=None, va=None, pa=None, ptes=None, error_type=None):
+        super().__init__(mode=mode, pagesize=pagesize, satp=satp, va=va, pa=pa, ptes=ptes)
+        self.error_type = error_type
+
+    def resolve(self, CR, pte_hashmap=None):
+        try:
+            super().resolve(CR, pte_hashmap=pte_hashmap)
+        except Errors.SuperPageNotCleared:
+            self.error_type = 'Superpage not cleared'
+        except Errors.PTEMarkedInvalid:
+            self.error_type = 'PTE is marked invalid'
+        except Errors.WriteNoReadError:
+            self.error_type = 'R = 0 & W = 1'
+        except Errors.LeafMarkedAsPointer:
+            self.error_type = 'Leaf marked as Ptr'
+        except Errors.NonGlobalAfterGlobal:
+            self.error_type = 'G followed by non-G'
+        except:
+            print('Unexpected error occurred in execution')
+            raise

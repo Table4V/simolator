@@ -11,8 +11,10 @@ def mask(n: int) -> int:
     # Create a bit mask for n bits
     return 2**n - 1
 
+
 def _randbits(n: int) -> int:
     return random.randint(0, 2**n - 1)
+
 
 def equate(x: int, y: int, backing_value: int) -> Tuple[int, int]:
     ''' Check x and y and fill constrained, setting to backing value (chosen by memory context aware generator) if both are undefined. '''
@@ -94,7 +96,7 @@ class ConstraintResolver:
             this_value = address & mask(width)
             chunked.append(this_value)
             address >>= width  # shift off the bits that have been assigned
-        
+
         return chunked
 
     def _chunk_random_pa_address(self, pte_aligned: bool = True) -> List[int]:
@@ -133,7 +135,7 @@ class ConstraintResolver:
     def _resolve_pte_pa(self, pte: PTE, pa: PA, final_level):
         for i in range(final_level):  # clear all the low parts
             if pte.ppn[i]:
-                raise Errors.InvalidBigPage()
+                raise Errors.SuperPageNotCleared()
             pte.ppn[i] = 0  # must be zero!
         ''' Modify the PTE and PA for the last stage '''
         backing_values = self._chunk_random_pa_address()
