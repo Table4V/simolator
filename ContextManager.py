@@ -233,7 +233,8 @@ class ContextManager:
                 else:
                     ptes[i] = PTE(mode=self.mode)
                     ptes[i].address = address
-                    ptes[i].ppn = pte_attrs.get('ppns')
+                    if ppns := pte_attrs.get('ppns'):
+                        ptes[i].ppn = ppns
 
                 flags = pte_attrs.get('attributes', {})
 
