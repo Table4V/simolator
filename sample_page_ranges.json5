@@ -6,15 +6,27 @@
     // lower_bound: 0x2000000000, // Start addresses from at least here
     test_cases: [
         {
-            page_range: {
+            "page_range": {
                 start: 0x1000,
                 num_pages: 1000,
-                // end: 0x9000000, // can also be done as area
-                // step: 0x1000, // you can step instead of using the pagesize
+                // end: 0x4000, // can also be done as area
+                // step: 0x2000, // you can step instead of using the pagesize
             },
+            "special": [
+                {
+                    index: 28,
+                    // Specifying an entire path
+                    ptes: [
+                        { address: 0x00001452876690 },
+                        { address: 0x000011fd18ccb8 },
+                        { address: 0x000027960d1f80 },
+                        { address: 0x0000264afd7c28 },
+                    ],
+                },
+            ],
             "satp.ppn": 0xcafebabe,
-            pagesize: ['1G', '2M', '4K'],
+            "pagesize": ["1G", "2M", "4K"],
             // same_va_pa: 1 // This with pagesize mixed will almost certainly cause a failure
-        }
+        },
     ],
 }

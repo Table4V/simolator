@@ -68,7 +68,7 @@
             "va": 0xf00fb00f,
         },
         {
-            repeats: 4,
+            repeats: 40,
             same_va_pa: 1,
         },
         {

@@ -7,16 +7,19 @@
     test_cases: [
         {
             // "satp.ppn": 0xcafebabe,
-            "va": 0xcafebabe,
-            // ""
-            "repeats": 50,
-            "pagesize": "2M",
-            "errors": {
-                mark_invalid: 0.1, // V = 0
-                write_no_read: 0.1, // W=1, R=0, on the leaf
-                global_nonglobal: 0.1, // Global mapping followed by G=0
-                leaf_as_pointer: 0.1, // Leaf marked as pointer
-                uncleared_superpage: 0.1, // Superpage has data set
+            va: 0xcafebabe,
+            repeats: 50,
+            pagesize: "2M",
+            errors: {
+                p: 0.5,
+                types: [
+                    "mark_invalid",
+                    "write_no_read",
+                    "global_nonglobal",
+                    "leaf_as_pointer",
+                    "uncleared_superpage",
+                ],
+                weights: [1,0,0,0,5]
             },
         },
     ],

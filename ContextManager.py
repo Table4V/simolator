@@ -247,28 +247,38 @@ class ContextManager:
                 ptes[i] = PTE(mode=self.mode)
 
         if errs := kwargs.get('errors'):
+            use_errs = {}
+            prob = errs.get('p')
             err = False
+            if prob:
+                if resolve_flag(prob): # Do a distribution choice
+                    errtype = random.choices(errs.get('types'), errs.get('weights'), k=1)[0]
+                    for error in ('mark_invalid', 'write_no_read', 'global_nonglobal', 'leaf_as_pointer', 'uncleared_superpage'):
+                        use_errs[error] = 0
+                    use_errs[errtype] = 1
+            else:
+                use_errs = errs
             # V = 0
-            if resolve_flag(errs.get('mark_invalid')):
+            if resolve_flag(use_errs.get('mark_invalid')):
                 err = True
                 ptes[-1].attributes.V = 0
             # W=1, R=0, on the leaf
-            if resolve_flag(errs.get('write_no_read')):
+            if resolve_flag(use_errs.get('write_no_read')):
                 err = True
                 ptes[-1].attributes.R = 0 
                 ptes[-1].attributes.W = 1
             # Global mapping followed by G=0
-            if resolve_flag(errs.get('global_nonglobal')):
+            if resolve_flag(use_errs.get('global_nonglobal')):
                 err = True
                 ptes[-2].attributes.G = 1 
                 ptes[-1].attributes.G = 0
             # Leaf marked as pointer
-            if resolve_flag(errs.get('leaf_as_pointer')):
+            if resolve_flag(use_errs.get('leaf_as_pointer')):
                 err = True
                 ptes[-1].attributes.R = 0 
                 ptes[-1].attributes.X = 0
             # Superpage has data set
-            if resolve_flag(errs.get('uncleared_superpage')):
+            if resolve_flag(use_errs.get('uncleared_superpage')):
                 err = True
                 ptes[-1].ppn[0] = random.randint(10, 200)
             
