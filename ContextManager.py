@@ -294,6 +294,15 @@ class ContextManager:
         with open(filename, 'w') as f:
             json.dump(self, f, default=lambda x: x.__dict__)
 
+    def jsonify(self) -> dict:
+        ''' Return a minimal JSON friendly thingy'''
+        return {
+            'mode': self.mode,
+            'lower_bound': self.lower_bound,
+            'memory_size': self.memory_size,
+            'walks': [walk.jsonify() for walk in self.walks]
+        }
+
     def __repr__(self):
         return f'<ContextManager: Sv{self.mode}, Memory Bounds: {self.lower_bound:0x}-{self.memory_size:0x}>'
 

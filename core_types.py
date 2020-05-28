@@ -30,6 +30,13 @@ class SATP:
     def ppn_width(self):
         return 22 if self.mode == 32 else 44
 
+    def jsonify(self):
+        return {
+            'mode': self.mode,
+            'asid': self.asid,
+            'ppn': self.ppn
+        }
+
     def __str__(self):
         return self.__format__(DEFAULT_FORMAT)
 
@@ -80,6 +87,9 @@ class PTE:
         @property
         def flags(self):
             return (self.D, self.A, self.G, self.U, self.X, self.W, self.R, self.V)
+
+        def jsonify(self):
+            return dict(zip(['RSW'] + list('DAGUXWRV'),[self.RSW] + list(self.flags)))
 
         def __str__(self):
             s = safe_to_bin(self.RSW, 2)
@@ -196,6 +206,14 @@ class PTE:
     def __str__(self):
         return self.__format__(DEFAULT_FORMAT)
 
+    def jsonify(self):
+        return {
+            'ppn': self.ppn,
+            'data': self.data(),
+            'address': self.address,
+            'attributes': self.attributes.jsonify()
+        }
+
     def __format__(self, format_code=DEFAULT_FORMAT):
         data_str = f'{self.data():x}' if self.data() != None else '???'
         ppn_str = f'0x{self.get_ppn():x}' if self.get_ppn() != None else '???'
@@ -221,7 +239,7 @@ class VA:
     vpn = []
     offset = None
     mode = 0
-    isEmpty = True
+    # isEmpty = True
     errorMessage = ""
 
     def __init__(self, data=None, mode=32, isLoad=False):
@@ -229,10 +247,10 @@ class VA:
             return
         self.mode = mode
         if data == None:
-            self.isEmpty = True
+            # self.isEmpty = True
             self.vpn = [None for i in self.widths if i]
         else:
-            self.isEmpty = False
+            # self.isEmpty = False
             self.set(data)
 
     def set(self, data=0xFFFFFFFFFFFF):
@@ -252,7 +270,7 @@ class VA:
             self.vpn.append((data >> 21) & 0x1FF)
             self.vpn.append((data >> 30) & 0x1FF)
             self.vpn.append((data >> 39) & 0x1FF)
-        self.isEmpty = False
+        # self.isEmpty = False
 
     def get_big_page(self, level=3):
         big_offset = self.offset
@@ -308,6 +326,13 @@ class VA:
 
         return f'{header}\n{display_line}\n{val_line}'
 
+    def jsonify(self):
+        return {
+            'data': self.data(),
+            'offset': self.offset,
+            'vpn': self.vpn
+        }
+
 
 class PA:
     ppn = []
@@ -320,7 +345,7 @@ class PA:
         self.mode = mode
         if data:
             self.set(data)
-            self.isEmpty = False
+            # self.isEmpty = False
         else:
             self.ppn = [None for i in self.widths if i != None]
 
@@ -339,7 +364,7 @@ class PA:
             self.ppn.append((data >> 21) & 0x1FF)
             self.ppn.append((data >> 30) & 0x1FF)
             self.ppn.append((data >> 39) & 0x1FFFF)
-        self.isEmpty = False
+        # self.isEmpty = False
 
     def data(self):
         pa = 0
@@ -365,6 +390,13 @@ class PA:
 
     def __str__(self):
         return self.__format__(DEFAULT_FORMAT)
+
+    def jsonify(self):
+        return {
+            'data': self.data(),
+            'ppn': self.ppn,
+            'offset': self.offset
+        }
 
     def __format__(self, format_code=DEFAULT_FORMAT):
         data_str = f'{self.data():x}' if self.data() != None else '???'

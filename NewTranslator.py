@@ -125,6 +125,17 @@ class TranslationWalk:
         print('------------------------------------------------------------------------')
         print()
 
+    def jsonify(self):
+        d = {}
+        d['mode'] = self.mode
+        d['startLevel'] = self.startLevel
+        d['endLevel'] = self.endLevel
+        d["ptes"] = [pte.jsonify() for pte in self.ptes]
+        d['va'] = self.va.jsonify()
+        d['pa'] = self.pa.jsonify()
+        d['satp'] = self.satp.jsonify()
+        return d
+
 
 class InvalidTranslationWalk(TranslationWalk):
     def __init__(self, mode=None, pagesize=None, satp=None, va=None, pa=None, ptes=None, error_type=None):
