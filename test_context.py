@@ -1,10 +1,10 @@
 #!/usr/bin/python3
-from ContextManager import ContextManager, ContextManagerFromJSON
+from Context import Context, ContextFromJSON
 import sys
 import json
 
 fn = sys.argv[1]
-mgr = ContextManagerFromJSON(fn)
+mgr = ContextFromJSON(fn)
 mgr.print_dump(len(sys.argv) > 2)
 # mgr.dump('output.json')
 
