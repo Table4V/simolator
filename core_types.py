@@ -89,7 +89,7 @@ class PTE:
             return (self.D, self.A, self.G, self.U, self.X, self.W, self.R, self.V)
 
         def jsonify(self):
-            return dict(zip(['RSW'] + list('DAGUXWRV'),[self.RSW] + list(self.flags)))
+            return dict(zip(['RSW'] + list('DAGUXWRV'),[self.RSW] + list(self.flags))) # maybe change RSW
 
         def __str__(self):
             s = safe_to_bin(self.RSW, 2)
@@ -209,6 +209,7 @@ class PTE:
     def jsonify(self):
         return {
             'ppn': self.ppn,
+            'contents': self.get_ppn(),
             'data': self.data(),
             'address': self.address,
             'attributes': self.attributes.jsonify()

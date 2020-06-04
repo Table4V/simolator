@@ -1,16 +1,16 @@
 <template>
-    <div>
+    <b-container fluid>
         <p>PageTableWalks:</p>
         <ptw-viewer></ptw-viewer>
         <ptw-viewer></ptw-viewer>
         <ptw-viewer></ptw-viewer>
-    </div>
+    </b-container>
 </template>
 
 <script>
 module.exports = {
     components: {
-        "ptw-viewer": httpVueLoader("modules/PageTableWalk.vue")
+        "ptw-viewer": httpVueLoader("modules/TabularPTW.vue")
     }
 };
 </script>

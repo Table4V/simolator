@@ -24,7 +24,7 @@ NullableInt = Union[int, None]
 bg.set_style('orange', RgbBg(255, 150, 50))
 
 
-class ContextManager:
+class Context:
     '''
     Hold our data, and make special & probabilistic test cases
     '''
@@ -201,7 +201,7 @@ class ContextManager:
         if reuse_satp:
             satp = random.choice(self.satps)
         else:
-            satp = SATP(mode=self.mode, asid=kwargs.get('satp.asid', 0), ppn=kwargs.get('satp.ppn'))
+            satp = SATP(mode=self.mode, **kwargs.get('satp', {})) #asid=kwargs.get('satp.asid', 0), ppn=kwargs.get('satp.ppn'))
         
 
         ptes = [None] * self.num_ptes(pagesize)
@@ -343,12 +343,16 @@ class ContextManager:
         print()
 
 
-def ContextManagerFromJSON(filename: str) -> ContextManager:
+def ContextFromJSON(json_data: Union[str, dict]) -> Context:
     ''' Load a JSON5 test config '''
-    with open(filename) as f:
-        params = json5.load(f)
+    if type(json_data) == str:
+        filename = json_data
+        with open(filename) as f:
+            params = json5.load(f)
+    else:
+        params = json_data
 
-    mgr = ContextManager(params.get('memory_size'), params.get('mode'), params.get('lower_bound', 0))
+    mgr = Context(params.get('memory_size'), params.get('mode'), params.get('lower_bound', 0))
 
     test_cases = params.get('test_cases', [])
 

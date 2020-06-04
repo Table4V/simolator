@@ -1,15 +1,25 @@
 <template>
-    <div>
-        Page Table Walk Sv{{ mode }}:
-        <ul>
-            <li>VA: 0x{{ va.data.toString(16) }}. VPN: {{ va.vpn }}. Offset: 0x{{ va.offset.toString(16) }}</li>
-            <li v-for="pte of ptes">PTE Addr: @0x{{ pte.address.toString(16) }}. ppns: {{ pte.ppn }}, flags: {{ pte.attributes }}</li>
-            <li>PA: 0x{{ pa.data.toString(16) }}. PPN: {{ pa.ppn }}. Offset: 0x{{ pa.offset.toString(16) }}</li>
-    </div>
+    <b-container fluid class="walkview">
+        <b-row>
+            <b-col>
+                VA: <num-viewer :value="va.data"></num-viewer>.
+                VPN: <num-viewer v-for="part of va.vpn" :value="part"></num-viewer>
+                Offset: <num-viewer :value="va.offset"></num-viewer></b-col>
+            <b-col
+                v-for="pte of ptes"
+                :key="pte.address"
+            >PTE Addr: @0x{{ pte.address.toString(16) }}. ppns: {{ pte.ppn }}, flags: {{ pte.attributes }}</b-col>
+            <b-col>PA: 0x{{ pa.data.toString(16) }}. PPN: {{ pa.ppn }}. Offset: 0x{{ pa.offset.toString(16) }}</b-col>
+        </b-row>
+    </b-container>
 </template>
 
 <script>
 module.exports = {
+    components: {
+        "num-viewer": httpVueLoader("modules/NumViewer.vue")
+    },
+    name: "ptw-viewer",
     // props: ["vpn", "ppn", "ptes"],
     data: function() {
         return {
@@ -102,5 +112,8 @@ module.exports = {
 };
 </script>
 
-<style>
+<style scoped>
+.walkview {
+    font-family: Consolas, "Courier New", Courier, monospace;
+}
 </style>
