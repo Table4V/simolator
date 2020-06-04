@@ -201,7 +201,10 @@ class Context:
         if reuse_satp:
             satp = random.choice(self.satps)
         else:
-            satp = SATP(mode=self.mode, **kwargs.get('satp', {})) #asid=kwargs.get('satp.asid', 0), ppn=kwargs.get('satp.ppn'))
+            if kwargs.get('satp.ppn'):
+                satp = SATP(mode=self.mode, asid=kwargs.get('satp.asid', 0), ppn=kwargs.get('satp.ppn'))
+            else:
+                satp = SATP(mode=self.mode, **kwargs.get('satp', {})) #asid=kwargs.get('satp.asid', 0), ppn=kwargs.get('satp.ppn'))
         
 
         ptes = [None] * self.num_ptes(pagesize)
