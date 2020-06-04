@@ -28,8 +28,10 @@
     <!-- Our application root element -->
     <div id="app">
         <b-container fluid>
-            <ptw v-for="(result, index) in walks" :key="index" :data="result">
-            </ptw>
+            <input-creator v-on:emit_data="process($event)"></input-creator>
+            <b-container>
+                <display-ptws v-for="walks in walksets" :walks="walks"></display-ptws>
+            </b-container>
         </b-container>
     </div>
 

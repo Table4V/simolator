@@ -158,3 +158,8 @@ class InvalidTranslationWalk(TranslationWalk):
         except:
             print('Unexpected error occurred in execution')
             raise
+
+    def jsonify(self):
+        d = super().jsonify()
+        d['error_type'] = self.error_type
+        return d

@@ -8,12 +8,15 @@
                         <b-td colspan="4">{{ phex(va.data) }}</b-td>
                     </b-tr>
                     <b-tr>
-                        <b-td
-                            variant="dark"
+                        <b-td colspan="4" variant="dark">VPN</b-td>
+                        <!-- <b-td -->
+                            <!-- variant="dark"
                             v-for="n in va.vpn.length"
                             :key="n"
-                        >VPN{{ va.vpn.length - n }}</b-td>
-                        <b-td variant="dark">Offset</b-td>
+                        > -->
+                        <!-- VPN{{ va.vpn.length - n }} -->
+                        <!-- </b-td> -->
+                        <b-td variant="dark">Off</b-td>
                     </b-tr>
                     <b-tr>
                         <b-td

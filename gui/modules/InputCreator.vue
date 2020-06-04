@@ -1,80 +1,52 @@
 <template>
-    <b-container fluid class="walkview">
-        <b-form>
-            <b-row no-gutters>
+    <b-container fluid class="form_input">
+        <b-form @submit="emit_data">
+            <b-form-row>
                 <b-col>
-                    <b-table-simple small outlined>
-                        <b-tr>
-                            <b-td variant="dark">VA</b-td>
-                            <b-td colspan="4"><input name="va" /></b-td>
-                        </b-tr>
-                        <b-tr>
-                            <b-td
-                                variant="dark"
-                                v-for="n in 4"
-                                :key="n"
-                            >VPN{{ va.vpn.length - n }}</b-td>
-                            <b-td variant="dark">Offset</b-td>
-                        </b-tr>
-                        <b-tr>
-                            <b-td
-                                v-for="(item, index) in va.vpn.slice().reverse()"
-                                :key="index"
-                            ><input {{ hex(item) }}</b-td>
-                            <b-td>{{hex(va.offset)}}</b-td>
-                        </b-tr>
-                    </b-table-simple>
-                </b-col>
-                <b-col v-for="pte of ptes" :key="pte.address">
-                    <b-table-simple small outlined>
-                        <b-tr>
-                            <b-td variant="dark">PTE</b-td>
-                            <b-td colspan="2" variant="dark">Address</b-td>
-                            <b-td colspan="2">{{ phex(pte.address) }}</b-td>
-                        </b-tr>
-                        <b-tr>
-                            <b-td
-                                variant="dark"
-                                v-for="n in pte.ppn.length"
-                                :key="n"
-                            >PPN{{ pte.ppn.length - n }}</b-td>
-                            <b-td variant="dark">RSDAGUXWRV</b-td>
-                        </b-tr>
-                        <b-tr>
-                            <b-td
-                                v-for="(item, index) in pte.ppn.slice().reverse()"
-                                :key="index"
-                            >{{ hex(item) }}</b-td>
-                            <b-td>
-                                <span style="white-space:pre">{{ flagstring(pte.attributes) }}</span>
-                            </b-td>
-                        </b-tr>
-                    </b-table-simple>
+                    Mode:
+                    <b-form-select v-model="form.mode" :options="[32, 39, 48]"></b-form-select>
                 </b-col>
                 <b-col>
-                    <b-table-simple small outlined>
-                        <b-tr>
-                            <b-td variant="dark">PA</b-td>
-                            <b-td colspan="4">{{ phex(pa.data) }}</b-td>
-                        </b-tr>
-                        <b-tr>
-                            <b-td
-                                variant="dark"
-                                v-for="n in pa.ppn.length"
-                                :key="n"
-                            >PPN{{ pa.ppn.length - n }}</b-td>
-                            <b-td variant="dark">Offset</b-td>
-                        </b-tr>
-                        <b-tr>
-                            <b-td
-                                v-for="(item, index) in pa.ppn.slice().reverse()"
-                                :key="index"
-                            >{{ hex(item) }}</b-td>
-                            <b-td>{{ hex(pa.offset) }}</b-td>
-                        </b-tr>
-                    </b-table-simple>
+                    Memory Size:
+                    <b-form-input v-model="form.memory_size"></b-form-input>
                 </b-col>
-            </b-row>
+                <b-col>
+                    Lowest Memory Address:
+                    <b-form-input v-model="form.lower_bound"></b-form-input>
+                </b-col>
+                <b-col>
+                    Page sizes:
+                    <b-form-checkbox-group v-model="form.pagesize" :options="pagesizes_available"></b-form-checkbox-group>
+                </b-col>
+                <b-col>
+                    SATP:
+                    <b-form-input v-model="form.satp.ppn" placeholder="0x123456"></b-form-input>
+                </b-col>
+            </b-form-row>
+            <b-form-row>
+                <b-col>
+                    Error Probability:
+                    <b-form-input v-model="form.errors.p" number placeholder="0.05"></b-form-input>
+                </b-col>
+                <b-col>
+                    VA = PA Probability:
+                    <b-form-input v-model="form.same_va_pa" number placeholder="0.05"></b-form-input>
+                </b-col>
+                <b-col>
+                    Aliasing Probability:
+                    <b-form-input v-model="form.aliasing" number placeholder="0.05"></b-form-input>
+                </b-col>
+                <b-col>
+                    Repeats:
+                    <b-form-input v-model="form.repeats" number></b-form-input>
+                </b-col>
+                <b-col>
+                    &nbsp;
+                    <!-- <b-form-group> -->
+                    <b-button variant="primary" type="submit" class="form-control">Run</b-button>
+                    <!-- </b-form-group> -->
+                </b-col>
+            </b-form-row>
         </b-form>
     </b-container>
 </template>
@@ -85,6 +57,30 @@ module.exports = {
     //     "num-viewer": httpVueLoader("modules/NumViewer.vue")
     // },
     name: "input-creator",
+    data: function() {
+        return {
+            form: {
+                repeats: 1,
+                mode: 39,
+                memory_size: null,
+                lower_bound: null,
+                pagesize: [],
+                satp: { ppn: null },
+                same_va_pa: 0,
+                aliasing: 0,
+                errors: {
+                    p: 0,
+                    types: [
+                        "mark_invalid",
+                        "write_no_read",
+                        "leaf_as_pointer",
+                        "uncleared_superpage"
+                    ],
+                    weights: [1, 1, 1, 1]
+                }
+            }
+        };
+    },
     methods: {
         hex(n) {
             return n.toString(16);
@@ -100,19 +96,21 @@ module.exports = {
                 s += c;
             }
             return s;
+        },
+        emit_data(evt) {
+            evt.preventDefault();
+            this.$emit('emit_data', this.form);
+            // console.log(JSON.stringify(this.form));
         }
     },
     // props: ["vpn", "ppn", "ptes"]
-    props: ["data"],
+    // props: [],
     computed: {
-        va() {
-            return this.data.va;
-        },
-        pa() {
-            return this.data.pa;
-        },
-        ptes() {
-            return this.data.ptes;
+        pagesizes_available() {
+            if (this.form.mode == 32) return ["4K", "4M"];
+            if (this.form.mode == 39) return ["4K", "2M", "1G"];
+            if (this.form.mode == 48) return ["4K", "2M", "1G", "512G"];
+            return [];
         }
     }
 };
