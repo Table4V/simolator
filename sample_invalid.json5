@@ -6,7 +6,7 @@
     // lower_bound: 0x2000000000, // Start addresses from at least here
     test_cases: [
         {
-            // "satp.ppn": 0xcafebabe,
+            "satp.ppn": 0xcafebabe,
             va: 0xcafebabe,
             repeats: 50,
             pagesize: "2M",
@@ -15,11 +15,11 @@
                 types: [
                     "mark_invalid",
                     "write_no_read",
-                    "global_nonglobal",
+                    // "global_nonglobal",
                     "leaf_as_pointer",
                     "uncleared_superpage",
                 ],
-                weights: [1,0,0,0,5]
+                weights: [1,4,2,5]
             },
         },
     ],
