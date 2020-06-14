@@ -42,11 +42,14 @@ class ConstraintResolver:
     Also, PAGESIZE is always 2**12 for a non-leaf, and then the leaf is already done differently?
 
     Change: support memory bounds
+    Change: support additional bounds for the PTE range
     '''
-    def __init__(self, mode: int, memory_size: int, lower_bound: int = 0):
+    def __init__(self, mode: int, memory_size: int, lower_bound: int = 0, pte_min: int = None, pte_max: int = None):
         self.mode = mode
         self.memory_size = memory_size
         self.lower_bound = lower_bound
+        self.pte_min = pte_min
+        self.pte_max = pte_max - 1 if type(pte_max) == int else pte_max
 
     @property
     def pte_ppn_widths(self) -> List[int]:
@@ -83,6 +86,13 @@ class ConstraintResolver:
         # TODO: maybe incorporate check that it is free?
         return random.randint(self.lower_bound, self.memory_size - 1)
 
+    def _random_pte_address(self) -> int:
+        ''' Get a random PTE address in the memory range as well as the PTE range '''
+        # TODO: maybe incorporate check that it is free?
+        low = max(self.lower_bound, self.pte_min or 0)
+        high = min(self.memory_size - 1, self.pte_max or self.memory_size)
+        return random.randint(low, high)
+
     def _chunk_address(self, address: NullableInt, trim_offset: bool = True) -> Union[List[int], List[None]]:
         ''' Break up the number to a list according to the PTE PPN widths '''
         if address is None:
@@ -110,10 +120,21 @@ class ConstraintResolver:
 
         return self._chunk_address(value, trim_offset=True)
 
+    def _chunk_random_pte_address(self, pte_aligned: bool = True) -> List[int]:
+        ''' Use the known PTE field widths to break out a random PA address to an array accordingly '''
+        value = self._random_pte_address()  # random bounded PTE PA
+
+        # if we need it PTE aligned, then clear the bits needed for that with a shift-unshift
+        if pte_aligned:
+            value >>= self.ALIGNMENT_BITS
+            value <<= self.ALIGNMENT_BITS
+
+        return self._chunk_address(value, trim_offset=True)
+
     def _resolve_satp_addr(self, satp: SATP, addr: int) -> int:
         ''' Modify the SATP to fit the constraints '''
         addr = addr >> PAGE_SHIFT if addr != None else None
-        satp.ppn, addr = equate(satp.ppn, addr, self._random_pa_address() >> PAGE_SHIFT)
+        satp.ppn, addr = equate(satp.ppn, addr, self._random_pte_address() >> PAGE_SHIFT)
         return addr << PAGE_SHIFT
 
     def _resolve_pte_addr(self, pte: PTE, addr: int, start_level: int = 0) -> int:
@@ -126,7 +147,7 @@ class ConstraintResolver:
         result_address = 0
         # addr = addr >> PAGE_SHIFT if addr != None else None
         for i, (bits, addr_val, randomized_value) in enumerate(
-                zip(pte.widths, self._chunk_address(addr), self._chunk_random_pa_address())):
+                zip(pte.widths, self._chunk_address(addr), self._chunk_random_pte_address())):
             pte.ppn[i], addr_val = equate(pte.ppn[i], addr_val, randomized_value)
             result_address |= (addr_val << offset)
             offset += bits

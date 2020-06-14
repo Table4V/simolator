@@ -91,7 +91,7 @@ class Context:
         base = f'SATP: {walk.satp.ppn:#0{ppn_width}x} VA: {va_str} -> [{pte_str}] -> {pa_str}'
         return base
 
-    def __init__(self, memory_size: Union[int, None], mode: int, lower_bound: int = 0):
+    def __init__(self, memory_size: Union[int, None], mode: int, lower_bound: int = 0, pte_min: int = 0, pte_max: int = None):
         ''' Initialize a ContextManager.
         params:
         size of memory (= the max physical address allowed in the simulation + 1)
@@ -112,7 +112,9 @@ class Context:
         self.satps: List[SATP] = []
         self.reference_counter = defaultdict(int)
         self.va_reference_counter = defaultdict(int)
-        self.CR = ConstraintResolver(mode=mode, memory_size=self.memory_size, lower_bound=self.lower_bound)
+        self.pte_min = pte_min
+        self.pte_max = pte_max or self.memory_size
+        self.CR = ConstraintResolver(mode=mode, memory_size=self.memory_size, lower_bound=self.lower_bound, pte_min=pte_min, pte_max=pte_max)
 
     def add_walk(self, pagesize: str, va: VA, pa: PA, ptes: List[PTE], satp: SATP):
         '''
@@ -355,7 +357,7 @@ def ContextFromJSON(json_data: Union[str, dict]) -> Context:
     else:
         params = json_data
 
-    mgr = Context(params.get('memory_size'), params.get('mode'), params.get('lower_bound', 0))
+    mgr = Context(params.get('memory_size'), params.get('mode'), params.get('lower_bound', 0), params.get('pte_min', 0), params.get('pte_max'))
 
     test_cases = params.get('test_cases', [])
 
