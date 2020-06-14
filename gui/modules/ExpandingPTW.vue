@@ -16,7 +16,15 @@
                         variant="info"
                     >{{ show_panel ? "Hide" : "Show" }}</b-button>
                 </b-col>
+
+                <!-- <b-col cols="1">
+                    <b-button @click="show_edit = !show_edit">Edit</b-button>
+                </b-col> -->
             </b-row>
+            <!-- <b-collapse v-model="show_edit">
+                <b-button @click="edit_data">Apply</b-button>
+                <v-jsoneditor v-model="data"></v-jsoneditor>
+            </b-collapse> -->
             <b-collapse v-model="show_panel">
                 <tabular-ptw :data="data"></tabular-ptw>
             </b-collapse>
@@ -34,8 +42,33 @@ module.exports = {
     props: ["data"],
     data: function() {
         return {
-            show_panel: false
+            show_panel: false,
+            show_edit: false,
+            localdata: null
         };
+    },
+    methods: {
+        edit_data() {
+            var mod_data = this.localdata;
+            mod_data["test_cases"] = [JSON.parse(JSON.stringify(this.localdata))];
+            console.log("Processing edit data");
+            fetch("/api", {
+                method: "POST", // or 'PUT'
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(mod_data)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    this.results = data;
+                    this.localdata = data[0];
+                });
+            console.log(this.results);
+        }
+    },
+    mounted() {
+        this.localdata = this.data;
     }
 };
 </script>

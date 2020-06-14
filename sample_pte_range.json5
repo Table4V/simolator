@@ -2,7 +2,7 @@
     // comments
     mode: 48, // Sv48
     pte_min: 0x50000000,
-    pte_max: 0x50100000,
+    pte_max: 0x50001000,
     // Sample JSON for running test cases
     // memory_size: 0x9000000000, // 576 GiB
     // lower_bound: 0x2000000000, // Start addresses from at least here

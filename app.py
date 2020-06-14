@@ -16,17 +16,19 @@ def send_module(filename):
     return send_from_directory('gui/modules', filename)
 
 
-def h2i(s: Union[str, None]) -> int:
+def h2i(s: Union[str, None, int]) -> int:
     if not s:
         return None
+    if type(s) == int:
+        return s
     return int(s, 16)
 
 
 def _clean(data: dict) -> dict:
     d = benedict.benedict(data)
-    d['memory_size'] = h2i(d['memory_size'])
-    d['lower_bound'] = h2i(d['lower_bound']) or 0
-    d['satp.ppn'] = h2i(d['satp.ppn'])
+    d['memory_size'] = h2i(d.get('memory_size'))
+    d['lower_bound'] = h2i(d.get('lower_bound')) or 0
+    d['satp.ppn'] = h2i(d.get('satp.ppn'))
     d['test_cases'] = [d]
     return d
 

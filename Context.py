@@ -322,6 +322,8 @@ class Context:
             'mode': self.mode,
             'lower_bound': self.lower_bound,
             'memory_size': self.memory_size,
+            'pte_min': self.pte_min, 
+            'pte_max': self.pte_max, 
             'walks': [walk.jsonify() for walk in self.walks]
         }
 
