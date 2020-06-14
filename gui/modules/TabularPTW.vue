@@ -5,10 +5,10 @@
                 <b-table-simple small outlined>
                     <b-tr>
                         <b-td variant="dark">VA</b-td>
-                        <b-td colspan="4">{{ phex(va.data) }}</b-td>
+                        <b-td :colspan="va.vpn.length">{{ phex(va.data) }}</b-td>
                     </b-tr>
                     <b-tr>
-                        <b-td colspan="4" variant="dark">VPN</b-td>
+                        <b-td :colspan="va.vpn.length" variant="dark">VPN</b-td>
                         <!-- <b-td -->
                             <!-- variant="dark"
                             v-for="n in va.vpn.length"
@@ -31,8 +31,8 @@
                 <b-table-simple small outlined>
                     <b-tr>
                         <b-td variant="dark">PTE</b-td>
-                        <b-td colspan="2" variant="dark">Address</b-td>
-                        <b-td colspan="2">{{ phex(pte.address) }}</b-td>
+                        <b-td variant="dark">Addr</b-td>
+                        <b-td :colspan="pte.ppn.length - 1">{{ phex(pte.address) }}</b-td>
                     </b-tr>
                     <b-tr>
                         <b-td
@@ -57,7 +57,7 @@
                 <b-table-simple small outlined>
                     <b-tr>
                         <b-td variant="dark">PA</b-td>
-                        <b-td colspan="4">{{ phex(pa.data) }}</b-td>
+                        <b-td :colspan="pa.ppn.length">{{ phex(pa.data) }}</b-td>
                     </b-tr>
                     <b-tr>
                         <b-td
@@ -123,5 +123,10 @@ module.exports = {
 .walkview {
     font-family: Consolas, "Courier New", Courier, monospace;
     font-size: 10pt;
+}
+
+
+.table-sm td, .table-sm th {
+    padding: 0.1rem;
 }
 </style>

@@ -16,7 +16,15 @@
                 </b-col>
                 <b-col>
                     Page sizes:
-                    <b-form-checkbox-group v-model="form.pagesize" :options="pagesizes_available"></b-form-checkbox-group>
+                    <b-form-checkbox-group
+                        :state="valid_pagesizes"
+                        v-model="form.pagesize"
+                        :options="pagesizes_available"
+                    >
+                        <b-form-invalid-feedback
+                            :state="valid_pagesizes"
+                        >Please select at least one page size</b-form-invalid-feedback>
+                    </b-form-checkbox-group>
                 </b-col>
                 <b-col>
                     SATP:
@@ -64,7 +72,7 @@ module.exports = {
                 mode: 39,
                 memory_size: null,
                 lower_bound: null,
-                pagesize: [],
+                pagesize: ["4K"],
                 satp: { ppn: null },
                 same_va_pa: 0,
                 aliasing: 0,
@@ -99,7 +107,7 @@ module.exports = {
         },
         emit_data(evt) {
             evt.preventDefault();
-            this.$emit('emit_data', this.form);
+            this.$emit("emit_data", this.form);
             // console.log(JSON.stringify(this.form));
         }
     },
@@ -111,6 +119,9 @@ module.exports = {
             if (this.form.mode == 39) return ["4K", "2M", "1G"];
             if (this.form.mode == 48) return ["4K", "2M", "1G", "512G"];
             return [];
+        },
+        valid_pagesizes() {
+            return this.form.pagesize.length > 0 && null; // null is there to disable the annoying green formatting
         }
     }
 };

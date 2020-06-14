@@ -29,7 +29,7 @@
     <div id="app">
         <b-container fluid>
             <input-creator v-on:emit_data="process($event)"></input-creator>
-            <b-container>
+            <b-container fluid>
                 <display-ptws v-for="walks in walksets" :walks="walks"></display-ptws>
             </b-container>
         </b-container>
