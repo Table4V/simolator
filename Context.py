@@ -171,10 +171,23 @@ class Context:
         '''
         # Step one: create and load everything from the test case
 
+        if type(pa) == dict:
+            _pa = PA(mode=self.mode)
+            _pa.offset = pa.get('offset') # unpack reflexive
+            _pa.ppn = pa.get('ppn') # unpack reflexive
+            pa = _pa
+        if type(va) == dict:
+            _va = VA(mode=self.mode)
+            _va.offset = va.get('offset')
+            _va.vpn = va.get('vpn')
+            va = _va
+
         if (type(pagesize) == list):
             pagesize = random.choice(pagesize)
         
-        if resolve_flag(aliasing):  # reuse an existing PA in the system
+        if type(pa) == PA:
+            pass
+        elif resolve_flag(aliasing):  # reuse an existing PA in the system
             pa_addr = random.sample(self.pas.keys(), 1)[0]
             pa = self.pas[pa_addr]
         elif pa in self.pas.keys():
@@ -182,13 +195,15 @@ class Context:
         else:
             pa = PA(mode=self.mode, data=pa)
 
-        if resolve_flag(same_va_pa) and pa.data():
-            va = pa.data()
-        
-        if va in self.vas.keys():
-            va = self.vas[va]
+        if type(va) == VA:
+            pass
         else:
-            va = VA(mode=self.mode, data=va)
+            if resolve_flag(same_va_pa) and pa.data():
+                va = pa.data()
+            if va in self.vas.keys():
+                va = self.vas[va]
+            else:
+                va = VA(mode=self.mode, data=va)
 
         if resolve_flag(same_va_pa):  # same VA and PA
             if pa.data() and va.data():
@@ -206,7 +221,9 @@ class Context:
             if kwargs.get('satp.ppn'):
                 satp = SATP(mode=self.mode, asid=kwargs.get('satp.asid', 0), ppn=kwargs.get('satp.ppn'))
             else:
-                satp = SATP(mode=self.mode, **kwargs.get('satp', {})) #asid=kwargs.get('satp.asid', 0), ppn=kwargs.get('satp.ppn'))
+                satp = kwargs.get('satp', {})
+                satp.pop('mode', None)
+                satp = SATP(mode=self.mode, **satp) #asid=kwargs.get('satp.asid', 0), ppn=kwargs.get('satp.ppn'))
         
 
         ptes = [None] * self.num_ptes(pagesize)
