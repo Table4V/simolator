@@ -15,10 +15,10 @@
                     attributes: {
                         // Set the flags (RSW, DAGUXWRV) probabilistically on the PTE
                         G: 0.5, // Float for probabilities
-                        U: 1, // 0 - 1 aren't probabilities
+                        U: 1, // 0 - 1 set/unset flags
                         X: 0.5, // Float for probabilities
-                        W: 0, // 0 - 1 aren't probabilities
-                        R: 1, // 0 - 1 aren't probabilities
+                        W: 0, // 0 - 1 set/unset flags
+                        R: 1, // 0 - 1 set/unset flags
                     },
                 },
             ],
