@@ -29,8 +29,8 @@ module.exports = {
 
 <style scoped>
 
-.ptwdisplayer {
+/* .ptwdisplayer {
     width: 1400px;
-}
+} */
 
 </style>

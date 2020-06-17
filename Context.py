@@ -407,3 +407,8 @@ def ContextFromJSON(json_data: Union[str, dict]) -> Context:
                 mgr.add_test_case(**test_case)
 
     return mgr
+
+def ContextFromJSON5(json5_data: str) -> Context:
+    ''' Context from a JSON5 string '''
+    data = json5.loads(json5_data)
+    return ContextFromJSON(data)

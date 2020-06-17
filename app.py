@@ -1,6 +1,6 @@
 from flask import Flask, send_from_directory, request, jsonify
 from NewTranslator import TranslationWalk, InvalidTranslationWalk
-from Context import Context, ContextFromJSON
+from Context import Context, ContextFromJSON, ContextFromJSON5
 from typing import Union
 import benedict
 app = Flask(__name__)
@@ -9,6 +9,10 @@ app = Flask(__name__)
 @app.route('/')
 def mainpage():
     return send_from_directory('gui/modules', 'index.html')
+
+@app.route('/advanced')
+def advanced():
+    return send_from_directory('gui/modules', 'advanced.html')
 
 
 @app.route('/modules/<path:filename>')
@@ -42,6 +46,13 @@ def simapi():
     # print(d)
     return jsonify(d)
 
+@app.route('/api/json5', methods=['POST'])
+def json5api():
+    data = request.get_json()
+    data = data['code']
+    mgr = ContextFromJSON5(data)
+    d = mgr.jsonify()
+    return jsonify(d)
 
 if __name__ == "__main__":
     app.run("0.0.0.0", port=8080, debug=True)

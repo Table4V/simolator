@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>RISC-V PTW Simulator</title>
+    <!-- Required Stylesheets -->
+    <link type="text/css" rel="stylesheet" href="https://unpkg.com/bootstrap/dist/css/bootstrap.min.css" />
+    <link type="text/css" rel="stylesheet" href="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.css" />
+
+    <!-- Load polyfills to support older browsers -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es2015%2CIntersectionObserver"></script>
+
+    <!-- Required scripts -->
+    <script src="https://unpkg.com/vue@latest/dist/vue.js"></script>
+    <script src="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.js"></script>
+
+    <!-- Loader -->
+    <script src="https://unpkg.com/http-vue-loader"></script>
+    <!-- Ace stuff -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.17/vue.min.js"></script> -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/ace.js"></script> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.11/ace.js"
+        integrity="sha256-Kr5Mbwq/xwJYw6XU4NR519/iosGvECYMyMU8IZ/rQok=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.11/mode-json5.min.js"
+        integrity="sha256-q96781Nvt3se14zTKaNj184Bakkl4Lwbe2YKVu6wtq0=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.11/ext-language_tools.min.js"
+        integrity="sha256-KFXf4u8zJlXEUJckmmZbITzYENXMuqPqyrlscCKeqFU=" crossorigin="anonymous"></script>
+    <script src="modules/ace-editor-vue-component.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <b-container fluid class="p-2">
+            <b-row style="width: 98vw;">
+                <b-col cols="4">
+                    <ace-editor v-model="code" min-lines="50" max-lines="50"></ace-editor>
+                    <!-- <ace-editor v-model="code" height="100%" width="100%"></ace-editor> -->
+                    <b-button variant="success" @click="process(code)">Update</b-button>
+                </b-col>
+                <b-col cols="8" style="height: 90vh; overflow-y: scroll;">
+                    <display-ptws v-for="walks in walksets" :walks="walks"></display-ptws>
+                </b-col>
+            </b-row>
+        </b-container>
+        <!-- <pre><code>{{ code }}</code></pre> -->
+        <!-- <textarea style="width: 100%;" rows="5" v-model="code"></textarea> -->
+    </div>
+
+    <!-- Start running your app -->
+    <script type="module" src="modules/adv-app.mjs">
+    </script>
+
+</body>
+
+</html>
