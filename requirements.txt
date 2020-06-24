@@ -24,3 +24,4 @@ wcwidth==0.2.3
 Werkzeug==1.0.1
 xmltodict==0.12.0
 yapf==0.30.0
+gunicorn==20.0.4
