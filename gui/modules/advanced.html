@@ -29,18 +29,29 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.11/ext-language_tools.min.js"
         integrity="sha256-KFXf4u8zJlXEUJckmmZbITzYENXMuqPqyrlscCKeqFU=" crossorigin="anonymous"></script>
     <script src="modules/ace-editor-vue-component.js"></script>
+    <style>
+        .editor {
+            height: 98vh;
+        }
+
+        .update-button {
+            position: fixed;
+            margin-left: 20px;
+            z-index: 200;
+        }
+    </style>
 </head>
 
 <body>
     <div id="app">
         <b-container fluid class="p-2">
             <b-row style="width: 98vw;">
-                <b-col cols="4">
-                    <ace-editor v-model="code" min-lines="50" max-lines="50"></ace-editor>
+                <b-col cols="4" class="pr-0">
+                    <ace-editor v-model="code" min-lines="50" class="editor"></ace-editor>
                     <!-- <ace-editor v-model="code" height="100%" width="100%"></ace-editor> -->
-                    <b-button variant="success" @click="process(code)">Update</b-button>
                 </b-col>
-                <b-col cols="8" style="height: 90vh; overflow-y: scroll;">
+                <b-col cols="8" style="height: 98vh; overflow-y: scroll;" class="no-gutters p-0">
+                    <b-button variant="success" @click="process(code)" class="update-button">Update</b-button>
                     <display-ptws v-for="walks in walksets" :walks="walks"></display-ptws>
                 </b-col>
             </b-row>

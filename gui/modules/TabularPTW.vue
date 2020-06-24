@@ -31,23 +31,23 @@
                 <b-table-simple small outlined>
                     <b-tr>
                         <b-td variant="dark">PTE</b-td>
-                        <b-td variant="dark">Addr</b-td>
-                        <b-td :colspan="pte.ppn.length - 1">{{ phex(pte.address) }}</b-td>
+                        <b-td :colspan="pte.ppn.length">{{ phex(pte.address) }}</b-td>
                     </b-tr>
                     <b-tr>
-                        <b-td
+                        <b-td variant="dark" :colspan="pte.ppn.length">PPN</b-td>
+                        <!-- <b-td
                             variant="dark"
                             v-for="n in pte.ppn.length"
                             :key="n"
-                        >PPN{{ pte.ppn.length - n }}</b-td>
-                        <b-td variant="dark">RSDAGUXWRV</b-td>
+                        >PPN{{ pte.ppn.length - n }}</b-td> -->
+                        <b-td variant="dark" style="text-align: right">RSDAGUXWRV</b-td>
                     </b-tr>
                     <b-tr>
                         <b-td
                             v-for="(item, index) in pte.ppn.slice().reverse()"
                             :key="index"
                         >{{ hex(item) }}</b-td>
-                        <b-td>
+                        <b-td style="text-align: right">
                             <span style="white-space:pre">{{ flagstring(pte.attributes) }}</span>
                         </b-td>
                     </b-tr>
@@ -60,12 +60,13 @@
                         <b-td :colspan="pa.ppn.length">{{ phex(pa.data) }}</b-td>
                     </b-tr>
                     <b-tr>
-                        <b-td
+                        <b-td variant="dark" :colspan="pa.ppn.length">PPN</b-td>
+                        <!-- <b-td
                             variant="dark"
                             v-for="n in pa.ppn.length"
                             :key="n"
-                        >PPN{{ pa.ppn.length - n }}</b-td>
-                        <b-td variant="dark">Offset</b-td>
+                        >PPN{{ pa.ppn.length - n }}</b-td> -->
+                        <b-td variant="dark">Off</b-td>
                     </b-tr>
                     <b-tr>
                         <b-td

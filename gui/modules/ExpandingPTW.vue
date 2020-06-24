@@ -25,9 +25,11 @@
                 <b-button @click="edit_data">Apply</b-button>
                 <v-jsoneditor v-model="data"></v-jsoneditor>
             </b-collapse> -->
+            <!-- <b-modal v-model="show_panel" size="xl"> -->
             <b-collapse v-model="show_panel">
                 <tabular-ptw :data="data"></tabular-ptw>
             </b-collapse>
+            <!-- </b-modal> -->
         </b-card>
     </b-container>
 </template>

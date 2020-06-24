@@ -6,10 +6,13 @@ import benedict
 app = Flask(__name__)
 
 
-@app.route('/')
-def mainpage():
-    return send_from_directory('gui/modules', 'index.html')
 
+
+@app.route('/basic')
+def basic():
+    return send_from_directory('gui/modules', 'basic.html')
+
+@app.route('/')
 @app.route('/advanced')
 def advanced():
     return send_from_directory('gui/modules', 'advanced.html')
@@ -42,7 +45,7 @@ def simapi():
     data = request.get_json()
     # print('API called,', data)
     mgr = ContextFromJSON(_clean(data))
-    d = mgr.jsonify()
+    d = mgr.jsonify_color()
     # print(d)
     return jsonify(d)
 
@@ -51,7 +54,7 @@ def json5api():
     data = request.get_json()
     data = data['code']
     mgr = ContextFromJSON5(data)
-    d = mgr.jsonify()
+    d = mgr.jsonify_color()
     return jsonify(d)
 
 if __name__ == "__main__":

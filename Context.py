@@ -327,6 +327,16 @@ class Context:
             'walks': [walk.jsonify() for walk in self.walks]
         }
 
+    def jsonify_color(self) -> dict:
+        return {
+            'mode': self.mode,
+            'lower_bound': self.lower_bound,
+            'memory_size': self.memory_size,
+            'pte_min': self.pte_min, 
+            'pte_max': self.pte_max, 
+            'walks': [walk.jsonify_color(self.va_reference_counter, self.reference_counter) for walk in self.walks]
+        }
+
     def __repr__(self):
         return f'<ContextManager: Sv{self.mode}, Memory Bounds: {self.lower_bound:0x}-{self.memory_size:0x}>'
 

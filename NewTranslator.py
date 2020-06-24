@@ -136,6 +136,31 @@ class TranslationWalk:
         d['satp'] = self.satp.jsonify()
         return d
 
+    def jsonify_color(self, va_ref_counter: dict, pa_ref_counter: dict):
+        d = {}
+        d['mode'] = self.mode
+        d['startLevel'] = self.startLevel
+        d['endLevel'] = self.endLevel
+        d["ptes"] = [pte.jsonify() for pte in self.ptes]
+        d['va'] = self.va.jsonify()
+        d['pa'] = self.pa.jsonify()
+        d['satp'] = self.satp.jsonify()
+
+        if self.va.data() == self.pa.data(): # colorize VA = PA
+            d['va']['same_va_pa'] = True
+            d['pa']['same_va_pa'] = True
+
+        if va_ref_counter[self.va.data()] > 1:
+            d['va']['reuse'] = True
+        
+        if pa_ref_counter[self.pa.data()] > 1:
+            d['pa']['reuse'] = True
+        
+        for pte in d['ptes']:
+            if pa_ref_counter[pte['address']] > 1:
+                pte['reuse'] = True
+        return d
+
 
 class InvalidTranslationWalk(TranslationWalk):
     def __init__(self, mode=None, pagesize=None, satp=None, va=None, pa=None, ptes=None, error_type=None):
