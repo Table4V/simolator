@@ -10,7 +10,6 @@ json5==0.9.4
 mailchecker==3.3.8
 MarkupSafe==1.1.1
 phonenumbers==8.12.4
-pkg-resources==0.0.0
 python-benedict==0.18.1
 python-dateutil==2.8.1
 python-slugify==4.0.0
