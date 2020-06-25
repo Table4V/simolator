@@ -46,7 +46,7 @@
     <div id="app">
         <b-container fluid class="p-2">
             <b-row style="width: 98vw;">
-                <b-col cols="4" class="pr-0">
+                <b-col cols="4" class="pr-0" ref="left_col" @dragover.prevent @drop.stop.prevent="drop">
                     <ace-editor v-model="code" min-lines="50" class="editor"></ace-editor>
                     <!-- <ace-editor v-model="code" height="100%" width="100%"></ace-editor> -->
                 </b-col>

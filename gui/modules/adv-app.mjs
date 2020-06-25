@@ -37,8 +37,7 @@ new Vue({
             ptes: [
                 {},
                 {
-                    // PTE entry -- set the address + the PPNs
-                    // Something is going wrong with midlevel PTEs
+                    // PTE entry -- set the address
                     address: 0xcafebabe0,
                 },
                 {},
@@ -48,8 +47,8 @@ new Vue({
             repeats: 4,
             ptes: [
                 {
-                    // PTE entry -- set the address + the PPNs
-                    // If you use a list wehere a jumber is needed, it'll choose at random
+                    // PTE entry -- set the address
+                    // If you use a list where a number is needed, it'll choose at random
                     address: [0xdeadbeef0, 0xcafebabe0],
                 },
                 {},
@@ -111,5 +110,25 @@ new Vue({
             })
             console.log(this.results);
         },
-    }
+        drop(ev) {
+            console.log('File(s) dropped');
+            // Prevent default behavior (Prevent file from being opened)
+            ev.preventDefault();
+            var file = ev.dataTransfer.files[0];
+            var self = this;
+            file.text().then(text => self.code = text);
+        }
+
+    },
+    // mounted() {
+    //     var dropArea = this.$refs.left_col;
+    //     console.log('Droparea registered');
+    //     dropArea.addEventListener('drop', (event) => {
+    //         console.log('dropped');
+    //         event.stopPropagation();
+    //         event.preventDefault();
+    //         const fileList = event.dataTransfer.files;
+    //         console.log(fileList);
+    //     });
+    // },
 });
