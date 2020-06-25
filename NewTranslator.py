@@ -188,3 +188,9 @@ class InvalidTranslationWalk(TranslationWalk):
         d = super().jsonify()
         d['error_type'] = self.error_type
         return d
+
+
+    def jsonify_color(self, va_ref_counter: dict, pa_ref_counter: dict):
+        d = super().jsonify_color(va_ref_counter, pa_ref_counter)
+        d['error_type'] = self.error_type
+        return d

@@ -1,5 +1,5 @@
 <template>
-    <b-container fluid class="walkview">
+    <b-container fluid class="walkview" v-bind:class=" { 'error' : error_type }">
         <b-row no-gutters outlined>
             <b-col>
                 VA:
@@ -28,6 +28,11 @@
                     v-b-tooltip
                     :title="popup_arr([pa.offset].concat(pa.ppn))"
                 >{{ phex(pa.data) }}</span>
+            </b-col>
+        </b-row>
+        <b-row v-if="error_type">
+            <b-col style="text-align: center;">
+                <span class="error_msg">ERROR: {{ error_type }}</span>
             </b-col>
         </b-row>
     </b-container>
@@ -78,6 +83,9 @@ module.exports = {
         },
         ptes() {
             return this.data.ptes;
+        },
+        error_type() {
+            return this.data.error_type || null;
         }
     }
 };
@@ -100,5 +108,14 @@ module.exports = {
 
 .same_va_pa {
     background-color: lightskyblue;
+}
+
+.error_msg {
+    font-weight: bold;
+}
+
+
+.error {
+    background-color: orange;
 }
 </style>

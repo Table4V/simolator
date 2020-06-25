@@ -2,7 +2,7 @@ from flask import Flask, send_from_directory, request, jsonify
 from NewTranslator import TranslationWalk, InvalidTranslationWalk
 from Context import Context, ContextFromJSON, ContextFromJSON5
 from typing import Union
-import benedict
+# import benedict
 app = Flask(__name__)
 
 
@@ -32,7 +32,8 @@ def h2i(s: Union[str, None, int]) -> int:
 
 
 def _clean(data: dict) -> dict:
-    d = benedict.benedict(data)
+    # d = benedict.benedict(data)
+    d = data
     d['memory_size'] = h2i(d.get('memory_size'))
     d['lower_bound'] = h2i(d.get('lower_bound')) or 0
     d['satp.ppn'] = h2i(d.get('satp.ppn'))
