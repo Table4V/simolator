@@ -179,7 +179,9 @@ class Context:
         if type(va) == dict:
             _va = VA(mode=self.mode)
             _va.offset = va.get('offset')
-            _va.vpn = va.get('vpn')
+
+            # VA VPN causes potential issues with array copy when defined. Adjusting for that here
+            _va.vpn = va.get('vpn', []).copy()
             va = _va
 
         if (type(pagesize) == list):
