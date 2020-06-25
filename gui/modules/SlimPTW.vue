@@ -32,7 +32,7 @@
         </b-row>
         <b-row v-if="error_type">
             <b-col style="text-align: center;">
-                <span class="error_msg">ERROR: {{ error_type }}</span>
+                <span class="error_msg">Exception: {{ error_type }}</span>
             </b-col>
         </b-row>
     </b-container>
