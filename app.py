@@ -2,15 +2,15 @@ from flask import Flask, send_from_directory, request, jsonify
 from NewTranslator import TranslationWalk, InvalidTranslationWalk
 from Context import Context, ContextFromJSON, ContextFromJSON5
 from typing import Union
+from simulator_errors import Errors
 # import benedict
 app = Flask(__name__)
-
-
 
 
 @app.route('/basic')
 def basic():
     return send_from_directory('gui/modules', 'basic.html')
+
 
 @app.route('/')
 @app.route('/advanced')
@@ -50,13 +50,18 @@ def simapi():
     # print(d)
     return jsonify(d)
 
+
 @app.route('/api/json5', methods=['POST'])
 def json5api():
-    data = request.get_json()
-    data = data['code']
-    mgr = ContextFromJSON5(data)
-    d = mgr.jsonify_color()
-    return jsonify(d)
+    try:
+        data = request.get_json()
+        data = data['code']
+        mgr = ContextFromJSON5(data)
+        d = mgr.jsonify_color()
+        return jsonify(d)
+    except (Errors.LeafMarkedAsPointer, Errors.InvalidConstraints):
+        return jsonify({'error': "Couldn't satisfy the provided constraints"})
+
 
 if __name__ == "__main__":
     app.run("0.0.0.0", port=8080, debug=True)

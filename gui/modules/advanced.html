@@ -34,43 +34,66 @@
         integrity="sha256-q96781Nvt3se14zTKaNj184Bakkl4Lwbe2YKVu6wtq0=" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.11/ext-language_tools.min.js"
         integrity="sha256-KFXf4u8zJlXEUJckmmZbITzYENXMuqPqyrlscCKeqFU=" crossorigin="anonymous"></script>
+
+    <!-- Ace Beautify -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.11/ext-beautify.min.js"
+        integrity="sha256-0YZfSqPbnVb097jq0n3t8cijp/YpGnlr8T/49K9o7Os=" crossorigin="anonymous"></script> -->
+
+    <!-- Beautify -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.11.0/beautify.js"></script>
+
     <script src="modules/ace-editor-vue-component.js"></script>
     <style>
         .editor {
             height: 98vh;
+            font-family: 'Consolas', 'Courier New', 'Courier', 'monospace';
         }
 
-        .update-button {
-            position: fixed;
+        .update-row {
+            /* position: fixed; */
             margin-left: 20px;
             z-index: 200;
         }
+
+        /*.server_error {
+            position: absolute;
+            z-index: 500;
+        }*/
     </style>
 </head>
 
 <body>
     <div id="app">
         <b-container fluid class="p-2">
+            <b-alert v-model="show_error" dismissible variant="danger">{{ error_message }}</b-alert>
             <b-row style="width: 98vw;">
                 <b-col cols="4" class="pr-0" ref="left_col" @dragover.prevent @drop.stop.prevent="drop">
                     <ace-editor v-model="code" min-lines="50" class="editor"></ace-editor>
                     <!-- <ace-editor v-model="code" height="100%" width="100%"></ace-editor> -->
                 </b-col>
-                <b-col cols="8" style="height: 98vh; overflow-y: scroll;" class="no-gutters p-0">
-                    <b-row class="update-button">
-                        <b-button variant="success" @click="process(code)">Update</b-button>
-                        <b-button variant="success" @click="download_code()">Download Code</b-button>
-                        <b-button variant="success" @click="download_results()">Download Results</b-button>
-                    </b-row>
-                    <display-ptws v-for="walks in walksets" :walks="walks"></display-ptws>
+                <b-col cols="8" style="height: 98vh;" class="no-gutters p-0">
+                    <b-row class="update-row">
+                        <div>
+                            <b-button variant="success" @click="process(code)">Update</b-button>
+                            <b-button variant="primary" @click="download_code()">Download Code</b-button>
+                            <b-button variant="primary" @click="download_results()">Download Results</b-button>
+                            <b-button variant="primary" @click="prettify()">Prettify</b-button>
 
+                            <b-dropdown text="Load Example">
+                                <b-dropdown-item v-for="example in examples" :key="example.name" :value="example.data"
+                                    @click="code = example.data">{{ example.name }}</b-dropdown-item>
+                            </b-dropdown>
+                        </div>
+                    </b-row>
+                    <b-row style="height: calc(98vh - 1rem - 16px); overflow-y: scroll;" class="pt-1">
+                        <display-ptws v-for="walks in walksets" :walks="walks"></display-ptws>
+                    </b-row>
                 </b-col>
             </b-row>
         </b-container>
         <!-- <pre><code>{{ code }}</code></pre> -->
         <!-- <textarea style="width: 100%;" rows="5" v-model="code"></textarea> -->
     </div>
-
     <!-- Start running your app -->
     <script type="module" src="modules/adv-app.mjs">
     </script>
