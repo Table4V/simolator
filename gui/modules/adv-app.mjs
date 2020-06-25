@@ -105,10 +105,10 @@ new Vue({
                 },
                 body: JSON.stringify({ 'code': this.code }),
             }).then(response => response.json()).then(data => {
-                // this.results = data;
+                this.results.push(data);
                 this.walksets.push(data.walks);
             })
-            console.log(this.results);
+            // console.log(this.results);
         },
         drop(ev) {
             console.log('File(s) dropped');
@@ -117,7 +117,15 @@ new Vue({
             var file = ev.dataTransfer.files[0];
             var self = this;
             file.text().then(text => self.code = text);
-        }
+        },
+        download_code() {
+            var blob = new Blob([this.code], {type: "text/plain;charset=utf-8"});
+            saveAs(blob, "code.json5");
+        },
+        download_results() {
+            var blob = new Blob([JSON.stringify(this.results, null, 4)], {type: "application/json;charset=utf-8"});
+            saveAs(blob, "results.json");
+        },
 
     },
     // mounted() {
