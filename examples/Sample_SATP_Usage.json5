@@ -1,0 +1,21 @@
+{
+    mode: 48, // Sv48
+    // Sample JSON for running test cases
+    satp: 0xf333f33300, // unqualified int is interpreted as the PPN.
+    // satp: {ppn : 0xf333f33300}, // also works.
+    // "satp.ppn" : 0xf333f33300, // also works.
+    test_cases: [
+        {
+            // Without a specific directive, defaults to simply showing the
+            repeats: 10,
+        },
+        {
+            // specifics take precedence over the general one
+            "satp.ppn": 0xf99f99f99, // another valid syntax.
+        },
+        {
+            // specifics take precedence over the general one
+            satp: { ppn: 0xf22f22f22 }, // another valid syntax.
+        },
+    ],
+}

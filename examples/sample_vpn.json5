@@ -1,0 +1,20 @@
+{
+    // comments
+    mode: 48, // Sv48
+    // Sample JSON for running test cases
+    // memory_size: 0x9000000000, // 576 GiB
+    // lower_bound: 0x2000000000, // Start addresses from at least here
+    test_cases: [
+        {
+            va: 0xcafebabe, // you could just set the VA if you want the brief way
+        },
+        {
+            va: {
+                vpn: [0x22, null, 0x33, null], // you can set the fields of the VPN.
+                // Null leaves a degree of freedom in that section VPN
+                // Note: it's VPN0 VPN1 VPN2 VPN3, so it'll look backwards here
+                offset: 0x131, // You can also set the offset.
+            },
+        },
+    ],
+}
