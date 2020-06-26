@@ -91,11 +91,13 @@ class Context:
         base = f'SATP: {walk.satp.ppn:#0{ppn_width}x} VA: {va_str} -> [{pte_str}] -> {pa_str}'
         return base
 
-    def __init__(self, memory_size: Union[int, None], mode: int, lower_bound: int = 0, pte_min: int = 0, pte_max: int = None):
+    def __init__(self, memory_size: Union[int, None], mode: int, lower_bound: int = 0, pte_min: int = 0, pte_max: int = None, global_satp: SATP = None):
         ''' Initialize a ContextManager.
         params:
         size of memory (= the max physical address allowed in the simulation + 1)
-        mode = 32 / 39 / 48
+        mode = 32 / 39 / 48.
+        pte_min and pte_max (int, bounds the PTE areas)
+        global_satp = default SATP, will randomize if None 
         '''
         # TODO: add stuff to classes for bounded randomness issues.
         self.memory_size = memory_size or MAX_PA_MAP[mode]  # 0 is not supported here (duh)
@@ -115,6 +117,11 @@ class Context:
         self.pte_min = pte_min
         self.pte_max = pte_max or self.memory_size
         self.CR = ConstraintResolver(mode=mode, memory_size=self.memory_size, lower_bound=self.lower_bound, pte_min=pte_min, pte_max=pte_max)
+        
+        # Create a default SATP if not past parametrically. To quote RISC-V docs: This register holds the physical page number (PPN)
+        # of the root page table, i.e., its supervisor physical address divided by 4 KiB. Equivalent to >> (12 = PAGESIZE)
+        self.global_satp = global_satp or SATP(self.mode, asid=0, ppn=(self.CR._random_pte_address() // 4096))
+
 
     def add_walk(self, pagesize: str, va: VA, pa: PA, ptes: List[PTE], satp: SATP):
         '''
@@ -168,6 +175,8 @@ class Context:
         Add a test case, with probabilistic usage of 'Testing Knowledge' cases.
         Made in a way that in the future passing JSON into it will be easy. (Through the kwargs)
         Probabilities from 0 to 1 (float).
+
+        TODO: Clean this up a bit. Not much that can be eliminated, but stuff should be able to be moved around and parcelled out.
         '''
         # Step one: create and load everything from the test case
 
@@ -216,16 +225,33 @@ class Context:
                 va.set(self.random_address())
                 pa.set(va.data())
         
-        reuse_satp = resolve_flag(kwargs.get('reuse_satp'))
-        if reuse_satp:
-            satp = random.choice(self.satps)
+
+        # Change (Jun26) -- clean up the SATP usage.
+        # Reuse should no longer be necessary since it's the default
+
+        # First order of resolution:
+        # reuse_satp = resolve_flag(kwargs.get('reuse_satp'))
+        # if reuse_satp:
+        #     satp = random.choice(self.satps)
+
+
+        satp_data = kwargs.get('satp', {})
+        if type(satp_data) == int:
+            satp_data = { 'ppn' : satp_data }
+
+        if ppn := kwargs.get('satp.ppn'):
+            satp_data['ppn'] = ppn
+
+        if not satp_data:
+            satp = self.global_satp
         else:
-            if kwargs.get('satp.ppn'):
-                satp = SATP(mode=self.mode, asid=kwargs.get('satp.asid', 0), ppn=kwargs.get('satp.ppn'))
-            else:
-                satp = kwargs.get('satp', {})
-                satp.pop('mode', None)
-                satp = SATP(mode=self.mode, **satp) #asid=kwargs.get('satp.asid', 0), ppn=kwargs.get('satp.ppn'))
+            ppn = satp_data.get('ppn')
+            asid = kwargs.get('satp.asid') or satp_data.get('asid') or 0
+            satp = SATP(mode=self.mode, asid=asid, ppn=ppn)
+            # else:
+            #     satp = kwargs.get('satp', {})
+            #     satp.pop('mode', None)
+            #     satp = SATP(mode=self.mode, **satp) #asid=kwargs.get('satp.asid', 0), ppn=kwargs.get('satp.ppn'))
         
 
         ptes = [None] * self.num_ptes(pagesize)
@@ -277,12 +303,14 @@ class Context:
             if prob:
                 if resolve_flag(prob): # Do a distribution choice
                     errtype = random.choices(errs.get('types'), errs.get('weights'), k=1)[0]
-                    for error in ('mark_invalid', 'write_no_read', 'global_nonglobal', 'leaf_as_pointer', 'uncleared_superpage'):
+                    for error in ('mark_invalid', 'write_no_read', 'leaf_as_pointer', 'uncleared_superpage'):
                         use_errs[error] = 0
                     use_errs[errtype] = 1
             else:
                 use_errs = errs
             # V = 0
+
+            # TODO: flex locations of bad PTE
             if resolve_flag(use_errs.get('mark_invalid')):
                 err = True
                 ptes[-1].attributes.V = 0
@@ -292,10 +320,10 @@ class Context:
                 ptes[-1].attributes.R = 0 
                 ptes[-1].attributes.W = 1
             # Global mapping followed by G=0
-            if resolve_flag(use_errs.get('global_nonglobal')):
-                err = True
-                ptes[-2].attributes.G = 1 
-                ptes[-1].attributes.G = 0
+            # if resolve_flag(use_errs.get('global_nonglobal')):
+            #     err = True
+            #     ptes[-2].attributes.G = 1 
+            #     ptes[-1].attributes.G = 0
             # Leaf marked as pointer
             if resolve_flag(use_errs.get('leaf_as_pointer')):
                 err = True
@@ -326,6 +354,7 @@ class Context:
             'memory_size': self.memory_size,
             'pte_min': self.pte_min, 
             'pte_max': self.pte_max, 
+            'global_satp': self.global_satp.jsonify(),
             'walks': [walk.jsonify() for walk in self.walks]
         }
 
@@ -335,7 +364,8 @@ class Context:
             'lower_bound': self.lower_bound,
             'memory_size': self.memory_size,
             'pte_min': self.pte_min, 
-            'pte_max': self.pte_max, 
+            'pte_max': self.pte_max,
+            'global_satp': self.global_satp.jsonify(),
             'walks': [walk.jsonify_color(self.va_reference_counter, self.reference_counter) for walk in self.walks]
         }
 
@@ -388,11 +418,35 @@ def ContextFromJSON(json_data: Union[str, dict]) -> Context:
     else:
         params = json_data
 
-    mgr = Context(params.get('memory_size'), params.get('mode'), params.get('lower_bound', 0), params.get('pte_min', 0), params.get('pte_max'))
+    satp_data = params.get('satp', {})
+    if type(satp_data) == int:
+        satp_data = { 'ppn' : satp_data }
+
+    if 'satp.ppn' in params.keys():
+        satp_data['ppn'] = params['satp.ppn']
+    
+    if not satp_data:
+        global_satp = None
+    else:
+        global_satp = SATP(mode=params.get('mode'), asid=satp_data.get('asid'), ppn=satp_data[ppn])
+        # ppn = params.get('satp.ppn') or satp_data.get('ppn') or 0
+
+    mgr = Context(params.get('memory_size'), params.get('mode'), params.get('lower_bound', 0), params.get('pte_min', 0), params.get('pte_max'), global_satp)
 
     test_cases = params.get('test_cases', [])
 
+
     for test_case in test_cases:
+        # Handle the 'special' control
+
+        indices = []
+        special_args = {}
+
+        if special := test_case.get('special'):
+            indices = set(s.get('index') for s in special)
+            for case in special:
+                special_args[case.get('index')] = case
+
         if rg := test_case.get('page_range'): # Walrus
             # We do a  mapping of the first page address
             start = rg.get('start', mgr.lower_bound)
@@ -403,9 +457,13 @@ def ContextFromJSON(json_data: Union[str, dict]) -> Context:
             current_addr = start
             n_iters = 0
             while current_addr < end and (num_pages is None or n_iters < num_pages):
+                if n_iters in indices:
+                    use_case = {**test_case, **special_args.get(n_iters, {})}
+                else:
+                    use_case = test_case
                 for i in range(5): # how many failures we will try before we give up
                     try:
-                        mgr.add_test_case(**test_case, pa=current_addr)
+                        mgr.add_test_case(**use_case, pa=current_addr)
                         break
                     except (Errors.SuperPageNotCleared, Errors.InvalidConstraints):
                         pass
@@ -416,6 +474,10 @@ def ContextFromJSON(json_data: Union[str, dict]) -> Context:
 
         else:
             for i in range(test_case.get('repeats', 1)):
+                if i in indices:
+                    use_case = {**test_case, **special_args.get(i, {})}
+                else:
+                    use_case = test_case
                 mgr.add_test_case(**test_case)
 
     return mgr

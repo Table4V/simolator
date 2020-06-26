@@ -1,8 +1,9 @@
 <template>
     <b-container fluid class="walkview">
-        <b-row no-gutters>
+        <!-- White because of errors -->
+        <b-row no-gutters >
             <b-col>
-                <b-table-simple small outlined>
+                <b-table-simple small outlined class="bg-white">
                     <b-tr>
                         <b-td variant="dark">VA</b-td>
                         <b-td :colspan="va.vpn.length">{{ phex(va.data) }}</b-td>
@@ -28,7 +29,7 @@
                 </b-table-simple>
             </b-col>
             <b-col v-for="pte of ptes" :key="pte.address">
-                <b-table-simple small outlined>
+                <b-table-simple small outlined class="bg-white">
                     <b-tr>
                         <b-td variant="dark">PTE</b-td>
                         <b-td :colspan="pte.ppn.length">{{ phex(pte.address) }}</b-td>
@@ -54,7 +55,7 @@
                 </b-table-simple>
             </b-col>
             <b-col>
-                <b-table-simple small outlined>
+                <b-table-simple small outlined class="bg-white">
                     <b-tr>
                         <b-td variant="dark">PA</b-td>
                         <b-td :colspan="pa.ppn.length">{{ phex(pa.data) }}</b-td>
@@ -89,7 +90,7 @@ module.exports = {
     name: "tabular-ptw",
     methods: {
         hex(n) {
-            return n.toString(16);
+            return n.toString(16) || '???';
         },
         phex(n) {
             return "0x" + n.toString(16);

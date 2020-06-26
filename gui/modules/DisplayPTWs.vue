@@ -2,11 +2,10 @@
     <b-container fluid class="ptwdisplayer">
         <b-card no-body class="mb-1">
             <b-card-header header-tag="header" class="p-1" role="tab">
-                <b-button
-                    :pressed.sync="show_panel"
-                    block
-                    variant="info"
-                >{{ walkset.walks.length }} PTWs. SATP: {{ phex(walkset.global_satp.ppn) }}</b-button>
+                <b-button :pressed.sync="show_panel" block variant="info">
+                    {{ walkset.walks.length }} PTWs. SATP:
+                    <span class="satp">{{ phex(walkset.global_satp.ppn) }}</span>
+                </b-button>
             </b-card-header>
             <b-collapse v-model="show_panel">
                 <b-card-body class="p-0">
@@ -45,6 +44,9 @@ module.exports = {
 </script>
 
 <style scoped>
+.satp {
+    font-family: Consolas, "Courier New", Courier, monospace;
+}
 /* .ptwdisplayer {
     width: 1400px;
 } */

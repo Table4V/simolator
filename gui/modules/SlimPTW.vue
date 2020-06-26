@@ -1,5 +1,10 @@
 <template>
     <b-container fluid class="walkview" v-bind:class=" { 'error' : error_type }">
+        <b-row v-if="walk.satp.ppn != global_satp.ppn">
+            <b-col style="text-align: center;">
+                <span class="error_msg">SATP: {{ phex(walk.satp.ppn) }}</span>
+            </b-col>
+        </b-row>
         <b-row no-gutters outlined>
             <b-col>
                 VA:
@@ -40,7 +45,7 @@
 
 <script>
 module.exports = {
-    name: "ptw-viewer",
+    name: "slim-ptw",
     methods: {
         hex(n) {
             if (n == null) return "";
@@ -70,7 +75,7 @@ module.exports = {
         }
     },
     // props: ["vpn", "ppn", "ptes"]
-    props: ["walk"],
+    props: ["walk", "global_satp"],
     computed: {
         va() {
             return this.walk.va;

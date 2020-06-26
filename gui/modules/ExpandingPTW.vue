@@ -6,10 +6,15 @@
             <!-- <b-card-header header-tag="header" class="p-1" role="tab">
                 <b-button :pressed.sync="show_panel" block variant="info">{{ walks.length }} PTWs</b-button>
             </b-card-header>-->
-            <b-row v-if="walk.satp.ppn != global_satp.ppn">SATP: {{ phex(walk.satp.ppn) }}</b-row>
+            <!-- <b-row v-if="walk.satp.ppn != global_satp.ppn">SATP: {{ phex(walk.satp.ppn) }}</b-row> -->
+            <!-- <b-row v-if="walk.satp.ppn != global_satp.ppn">
+                <b-col style="text-align: center;" class="bg-info">
+                    <span class="error_msg">SATP: {{ phex(walk.satp.ppn) }}</span>
+                </b-col>
+            </b-row> -->
             <b-row>
                 <b-col cols="11">
-                    <slim-ptw :walk="walk"></slim-ptw>
+                    <slim-ptw :walk="walk" :global_satp="global_satp"></slim-ptw>
                 </b-col>
                 <b-col cols="1">
                     <b-button
@@ -85,11 +90,15 @@ module.exports = {
 </script>
 
 <style>
-/* .walkview {
+.walkview {
     font-family: Consolas, "Courier New", Courier, monospace;
     font-size: 10pt;
-} */
+}
 
+
+.error_msg {
+    font-weight: bold;
+}
 /* .va_data {
     text-decoration: underline;
     text-decoration-style: dotted;
