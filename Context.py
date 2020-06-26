@@ -428,7 +428,7 @@ def ContextFromJSON(json_data: Union[str, dict]) -> Context:
     if not satp_data:
         global_satp = None
     else:
-        global_satp = SATP(mode=params.get('mode'), asid=satp_data.get('asid'), ppn=satp_data[ppn])
+        global_satp = SATP(mode=params.get('mode'), asid=satp_data.get('asid'), ppn=satp_data['ppn'])
         # ppn = params.get('satp.ppn') or satp_data.get('ppn') or 0
 
     mgr = Context(params.get('memory_size'), params.get('mode'), params.get('lower_bound', 0), params.get('pte_min', 0), params.get('pte_max'), global_satp)
