@@ -61,6 +61,9 @@ def json5api():
         return jsonify(d)
     except (Errors.LeafMarkedAsPointer, Errors.InvalidConstraints):
         return jsonify({'error': "Couldn't satisfy the provided constraints"})
+    except ValueError:
+        return jsonify({'error': 'JSON5 syntax error'})
+
 
 
 if __name__ == "__main__":
