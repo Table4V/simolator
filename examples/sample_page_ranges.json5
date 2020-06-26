@@ -7,8 +7,8 @@
     test_cases: [
         {
             "page_range": {
-                start: 0x1000,
-                num_pages: 1000,
+                start: 0x10000,
+                num_pages: 100,
                 // end: 0x4000, // can also be done as area
                 // step: 0x2000, // you can step instead of using the pagesize
             },
