@@ -40,9 +40,6 @@
 
 <script>
 module.exports = {
-    components: {
-        "num-viewer": httpVueLoader("modules/NumViewer.vue")
-    },
     name: "ptw-viewer",
     methods: {
         hex(n) {
@@ -73,19 +70,19 @@ module.exports = {
         }
     },
     // props: ["vpn", "ppn", "ptes"]
-    props: ["data"],
+    props: ["walk"],
     computed: {
         va() {
-            return this.data.va;
+            return this.walk.va;
         },
         pa() {
-            return this.data.pa;
+            return this.walk.pa;
         },
         ptes() {
-            return this.data.ptes;
+            return this.walk.ptes;
         },
         error_type() {
-            return this.data.error_type || null;
+            return this.walk.error_type || null;
         }
     }
 };
@@ -114,8 +111,8 @@ module.exports = {
     font-weight: bold;
 }
 
-
+/* 
 .error {
     background-color: orange;
-}
+} */
 </style>

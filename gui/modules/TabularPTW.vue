@@ -83,10 +83,10 @@
 
 <script>
 module.exports = {
-    components: {
-        "num-viewer": httpVueLoader("modules/NumViewer.vue")
-    },
-    name: "ptw-viewer",
+    // components: {
+    //     "num-viewer": httpVueLoader("modules/NumViewer.vue")
+    // },
+    name: "tabular-ptw",
     methods: {
         hex(n) {
             return n.toString(16);
@@ -105,16 +105,16 @@ module.exports = {
         }
     },
     // props: ["vpn", "ppn", "ptes"]
-    props: ["data"],
+    props: ["walk"],
     computed: {
         va() {
-            return this.data.va;
+            return this.walk.va;
         },
         pa() {
-            return this.data.pa;
+            return this.walk.pa;
         },
         ptes() {
-            return this.data.ptes;
+            return this.walk.ptes;
         }
     }
 };

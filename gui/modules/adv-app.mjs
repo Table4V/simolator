@@ -4,15 +4,16 @@ import { examples } from './examples.mjs';
 new Vue({
     el: "#app",
     components: {
-        'ptw': httpVueLoader('modules/SlimPTW.vue'),
-        'display-ptws': httpVueLoader('modules/DisplayPTWs.vue'),
+        'slim-ptw': httpVueLoader('modules/SlimPTW.vue' + "?h=" + Math.random().toString(16)),
+        'display-ptws': httpVueLoader('modules/DisplayPTWs.vue' + "?h=" + Math.random().toString(16)),
+        "ptw-viewer": httpVueLoader("modules/ExpandingPTW.vue" + "?h=" + Math.random().toString(16))
     },
     data: {
         name: "",
         show_error: false,
         error_message: "",
         examples: examples,
-        walksets: [],
+        // walksets: [],
         results: [],
         code: ""
     },
@@ -32,9 +33,9 @@ new Vue({
                     return;
                 }
                 this.results.push(data);
-                this.walksets.push(data.walks);
+                // console.log(this.results);
+                // this.walksets.push(data.walks);
             })
-            // console.log(this.results);
         },
         drop(ev) {
             console.log('File(s) dropped');
