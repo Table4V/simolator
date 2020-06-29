@@ -83,13 +83,13 @@ class TranslationWalk:
 
         # CR = ConstraintResolver(mode=self.mode)
 
-        global_flag = False # if this is set, then we need to assert that subsequent levels are marked as global, I think
+        # global_flag = False # if this is set, then we need to assert that subsequent levels are marked as global, I think
         # First: Deal with SATP one
         self.ptes[0].address = CR.resolve(self.satp, self.va, self.ptes[0].address, self.startLevel)
         if self.ptes[0].address in pte_hashmap.keys():
             self.ptes[0] = pte_hashmap[self.ptes[0].address]
 
-            global_flag = self.ptes[0].assert_global(global_flag)
+            # global_flag = self.ptes[0].assert_global(global_flag)
 
         # Intermediate PTEs
         for index, level in enumerate(range(self.startLevel - 1, self.endLevel - 1, -1)):
@@ -99,7 +99,7 @@ class TranslationWalk:
             else:
                 self.ptes[index].set_pointer()
 
-            global_flag = self.ptes[index].assert_global(global_flag)
+            # global_flag = self.ptes[index].assert_global(global_flag)
             self.ptes[index].assert_pointer()
 
         # handle the leaf
@@ -108,7 +108,11 @@ class TranslationWalk:
             self.ptes[-1] = pte_hashmap[self.ptes[-1].address]
 
         self.ptes[-1].validate_leaf()
-        global_flag = self.ptes[-1].assert_global(global_flag)
+
+        for i in range(len(self.ptes)):
+            self.ptes[i].finalize()
+
+        # global_flag = self.ptes[-1].assert_global(global_flag)
         # assert self.va.data() != None, self.display()
         # self.ptes[-1].broadcast_ppn(ppn)
         # self.pa.set(phys_ppn, mode=self.mode)

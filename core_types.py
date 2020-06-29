@@ -3,6 +3,7 @@ from typing import List, Tuple, Union
 from utils import safe_to_bin, field_to_string, num_hex_digits, safe_to_hex
 from constants import PA_BITS
 import math
+import random
 
 from simulator_errors import Errors
 
@@ -136,16 +137,43 @@ class PTE:
             self.ppn[i] = ppn & mask(width)
             ppn >>= width  # shift off the bits that've been assigned
 
-    @property
-    def finalize_random(self):
-        for i, bits in enumerate(self.widths):
-            if self.ppn[i] is None and bits:
-                self.ppn[i] = randbits(bits)
-
     # New: make it simpler to find whether it is a leaf
     @property
     def leaf(self):
         return self.attributes.defined and (self.attributes.X | self.attributes.W | self.attributes.R)
+
+    def finalize(self):
+        ''' Finalize the PTE flags with reasonable defaults. If there's stuff
+         specified within a group (= XWR, AD), you need to specify the whole
+         thing or accept zeros filled in as defaults ''' 
+        self.attributes.RSW = self.attributes.RSW or 0
+        self.attributes.G = self.attributes.G or 0
+
+        self.attributes.U = self.attributes.U or 0
+        
+        if self.attributes.V is None:
+            self.attributes.V = 1
+        
+        if self.attributes.X is None and self.attributes.W is None and self.attributes.R is None:
+            xwr = random.choice( [ 0b001, 0b011, 0b100, 0b101, 0b111 ] )
+            self.attributes.X = xwr >> 2
+            self.attributes.W = (xwr >> 1) & 1
+            self.attributes.R = xwr & 1
+
+        else:
+            self.attributes.X = self.attributes.X or 0
+            self.attributes.W = self.attributes.W or 0
+            self.attributes.R = self.attributes.R or 0
+
+        if self.attributes.D is None and self.attributes.A is None:
+            ad = random.choice([ 0b00, 0b10, 0b11 ])
+            self.attributes.A = ad >> 1
+            self.attributes.D = ad & 1
+
+    
+        self.attributes.A = self.attributes.A or 0
+        self.attributes.D = self.attributes.D or 0
+
 
     def set_pointer(self):
         ''' Clear XWR (making this a pointer entry in the table). If they're set, raises an error '''
@@ -175,7 +203,7 @@ class PTE:
     def validate_leaf(self):
         if self.attributes.V == 0:
             raise Errors.PTEMarkedInvalid()
-        elif self.attributes.R == 0 and self.attributes.X == 0:
+        elif self.attributes.R == 0 and self.attributes.X == 0 and self.attributes.W == 0:
             raise Errors.LeafMarkedAsPointer()
         elif self.attributes.R == 0 and self.attributes.W == 1:
             raise Errors.WriteNoReadError()
