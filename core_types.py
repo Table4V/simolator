@@ -146,10 +146,6 @@ class PTE:
         ''' Finalize the PTE flags with reasonable defaults. If there's stuff
          specified within a group (= XWR, AD), you need to specify the whole
          thing or accept zeros filled in as defaults ''' 
-        self.attributes.RSW = self.attributes.RSW or 0
-        self.attributes.G = self.attributes.G or 0
-
-        self.attributes.U = self.attributes.U or 0
         
         if self.attributes.V is None:
             self.attributes.V = 1
@@ -160,10 +156,6 @@ class PTE:
             self.attributes.W = (xwr >> 1) & 1
             self.attributes.R = xwr & 1
 
-        else:
-            self.attributes.X = self.attributes.X or 0
-            self.attributes.W = self.attributes.W or 0
-            self.attributes.R = self.attributes.R or 0
 
         if self.attributes.D is None and self.attributes.A is None:
             ad = random.choice([ 0b00, 0b10, 0b11 ])
@@ -171,8 +163,15 @@ class PTE:
             self.attributes.D = ad & 1
 
     
-        self.attributes.A = self.attributes.A or 0
+        self.attributes.RSW = self.attributes.RSW or 0
         self.attributes.D = self.attributes.D or 0
+        self.attributes.A = self.attributes.A or 0
+        self.attributes.G = self.attributes.G or 0
+        self.attributes.U = self.attributes.U or 0
+        self.attributes.X = self.attributes.X or 0
+        self.attributes.W = self.attributes.W or 0
+        self.attributes.R = self.attributes.R or 0
+        self.attributes.V = self.attributes.V or 0
 
 
     def set_pointer(self):
@@ -209,37 +208,43 @@ class PTE:
             raise Errors.WriteNoReadError()
 
     def data(self):
-        return None  # TODO: handle attrs so this can go trhough
+        # return None  # TODO: handle attrs so this can go through
         pte = (self.attributes.V | (self.attributes.R << 1) | (self.attributes.W << 2) | (self.attributes.X << 3) |
                (self.attributes.U << 4) | (self.attributes.G << 5) | (self.attributes.A << 6) | (self.attributes.D << 7)
                | (self.attributes.RSW << 8))
-        if self.mode == 32:
-            pte |= (self.ppn[0] << 10) | (self.ppn[1] << 20)
-        if self.mode == 39:
-            pte |= (self.ppn[0] << 10) | (self.ppn[1] << 19) | (self.ppn[2] << 28)
-        if self.mode == 48:
-            pte |= (self.ppn[0] << 10) | (self.ppn[1] << 19) | (self.ppn[2] << 28) | (self.ppn[3] << 37)
-        return pte
+
+        ppn = self.get_ppn()
+        if ppn is None:
+            return ppn
+        return (ppn << 10) | pte
 
     def get_ppn(self):
         if None in self.ppn:
             return None
-        if self.mode == 32:
-            return (self.ppn[1] << 10) | self.ppn[0]
-        elif self.mode == 39:
-            return (self.ppn[2] << 18) | (self.ppn[1] << 9) | self.ppn[0]
-        elif self.mode == 48:
-            return (self.ppn[3] << 27) | (self.ppn[2] << 18) | (self.ppn[1] << 9) | self.ppn[0]
+        accumulated = 0
+        for width, ppn in zip(reversed(self.widths), reversed(self.ppn)):
+            accumulated |= ppn
+            accumulated <<= width
+
+        accumulated >>= width
+        return accumulated
+
+        # if self.mode == 32:
+        #     return (self.ppn[1] << 10) | self.ppn[0]
+        # elif self.mode == 39:
+        #     return (self.ppn[2] << 18) | (self.ppn[1] << 9) | self.ppn[0]
+        # elif self.mode == 48:
+        #     return (self.ppn[3] << 27) | (self.ppn[2] << 18) | (self.ppn[1] << 9) | self.ppn[0]
 
     def __str__(self):
         return self.__format__(DEFAULT_FORMAT)
 
     def jsonify(self):
         return {
+            'address': self.address,
             'ppn': self.ppn,
             'contents': self.get_ppn(),
             'data': self.data(),
-            'address': self.address,
             'attributes': self.attributes.jsonify()
         }
 
