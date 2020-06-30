@@ -150,16 +150,16 @@ class TranslationWalk:
         d['pa'] = self.pa.jsonify()
         d['satp'] = self.satp.jsonify()
 
-        if self.va.data() == self.pa.data(): # colorize VA = PA
+        if self.va.data() == self.pa.data():  # colorize VA = PA
             d['va']['same_va_pa'] = True
             d['pa']['same_va_pa'] = True
 
         if va_ref_counter[self.va.data()] > 1:
             d['va']['reuse'] = True
-        
+
         if pa_ref_counter[self.pa.data()] > 1:
             d['pa']['reuse'] = True
-        
+
         for pte in d['ptes']:
             if pa_ref_counter[pte['address']] > 1:
                 pte['reuse'] = True
@@ -187,15 +187,19 @@ class InvalidTranslationWalk(TranslationWalk):
         except:
             print('Unexpected error occurred in execution')
             raise
+
+        # Set defaults for unset fields in flag bits
         for i in range(len(self.ptes)):
             self.ptes[i].finalize()
-        
+
+        # Set unset parts of the VA to something random
+        # This should only ever occur in the invalid translation walks in cutoffs, in valid unneccessary.
+        self.va.randomize()
 
     def jsonify(self):
         d = super().jsonify()
         d['error_type'] = self.error_type
         return d
-
 
     def jsonify_color(self, va_ref_counter: dict, pa_ref_counter: dict):
         d = super().jsonify_color(va_ref_counter, pa_ref_counter)

@@ -90,9 +90,11 @@ module.exports = {
     name: "tabular-ptw",
     methods: {
         hex(n) {
-            return n.toString(16) || '???';
+            if (n == null) return '???';
+            return n.toString(16);
         },
         phex(n) {
+            if (n == null) return '???';
             return "0x" + n.toString(16);
         },
         flagstring(attrs) {

@@ -48,11 +48,11 @@ module.exports = {
     name: "slim-ptw",
     methods: {
         hex(n) {
-            if (n == null) return "";
+            if (n == null) return '???';
             return n.toString(16);
         },
         phex(n) {
-            if (n == null) return "";
+            if (n == null) return '???';
             return "0x" + n.toString(16);
         },
         flagstring(attrs) {

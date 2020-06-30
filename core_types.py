@@ -344,6 +344,14 @@ class VA:
             return [9, 9, 9, 9]
         return [None, None, None, None]
 
+    def randomize(self):
+        ''' Set random values to unset fields of the VA '''
+        for i, width in enumerate(self.widths):
+            if self.vpn[i] is None:
+                self.vpn[i] = random.getrandbits(width)
+        if self.offset is None:
+            self.offset = random.getrandbits(12)
+
     def __str__(self):
         return self.__format__()
 
@@ -401,7 +409,7 @@ class PA:
         # self.isEmpty = False
 
     def data(self):
-        pa = 0
+        pa = None
         if None not in self.ppn and len(self.ppn):
             pa = self.offset
             if self.mode == 32:
