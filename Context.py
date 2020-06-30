@@ -4,7 +4,7 @@ Manages the testing context -- e.g. how much memory we have, keeping track of PT
 '''
 
 import random
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, Dict
 from collections import defaultdict
 import json5
 import json
@@ -23,6 +23,8 @@ NullableInt = Union[int, None]
 
 bg.set_style('orange', RgbBg(255, 150, 50))
 
+PTE_REUSE_MAX_ATTEMPTS = 5
+
 
 class Context:
     '''
@@ -34,7 +36,8 @@ class Context:
     def valid_address(self, value):
         return value < self.memory_size
 
-    def num_ptes(self, pagesize):
+    def num_ptes(self, pagesize: str) -> int:
+        ''' Return the number of PTES for a walk with the given page size '''
         return self.levels - MODE_PAGESIZE_LEVEL_MAP[self.mode][pagesize]
 
     def _format_va(self, va_addr: int, colorterm=True):
@@ -107,7 +110,7 @@ class Context:
         }  # we'll use this to keep track of PTEs & PAs that have already been allocated and their physical addresses
         self.vas = {}
         self.pas = {}
-        self.ptes = {}
+        self.ptes: Dict[int, PTE] = {}
         # self.leaves = {}
         self.walks: List[TranslationWalk] = []
         self.levels = PT_LEVEL_MAP[mode]
@@ -199,6 +202,7 @@ class Context:
         if type(pa) == PA:
             pass
         elif resolve_flag(aliasing):  # reuse an existing PA in the system
+            # -- can cause issues when used with PTE reuse
             pa_addr = random.sample(self.pas.keys(), 1)[0]
             pa = self.pas[pa_addr]
         elif pa in self.pas.keys():
@@ -257,23 +261,34 @@ class Context:
         ptes = [None] * self.num_ptes(pagesize)
         reuse_pte = resolve_flag(reuse_pte)
         if reuse_pte:  # for now: not allowed with specifying PTE data
-            reuse_index = random.randint(0, self.num_ptes(pagesize) - 1)
-            # reuse_index = 2
-            take_from = random.choice(self.walks)
-            random_pte_addr = take_from.ptes[reuse_index].address
-            ptes[reuse_index] = self.ptes[random_pte_addr]
+            # Two issues here:
+            # (1) it has to be handled as a leaf or non-leaf accordingly
+            # (2) it needs to be reachable through the SATP if it's the first level
+            for i in range(PTE_REUSE_MAX_ATTEMPTS):
+                random_walk = random.choice(self.walks).ptes
+                random_index = random.randint(0, len(random_walk) - 1)
+                if random_index == 0:
+                    reuse_index = 0
+                elif random_walk[random_index].leaf:
+                    reuse_index = self.num_ptes(pagesize) - 1
+                elif self.num_ptes(pagesize) > 2:
+                    reuse_index = random.randint(1, self.num_ptes(pagesize) - 2)
+                elif self.num_ptes(pagesize) > 1:
+                    reuse_index = 1
+                else:
+                    continue
 
-            # if reuse_index == 0:
-            #     random_pte_addr = random.sample(self.leaves.keys(), 1)[0]
-            # else:
-            #     for i in range(10):
-            #         random_pte_addr = random.sample(self.ptes.keys(), 1)[0]
-            #         print(random_pte_addr)
-            #         if random_pte_addr not in self.leaves.keys():
-            #             break
-            #     else:
-            #         raise RuntimeError("Could not find a non-leaf")
-            #     print(f'picked {random_pte_addr:#x}, {reuse_index}')
+                # if attempt.leaf:
+                #     reuse_index = self.num_ptes(pagesize) - 1
+                # elif self.num_ptes(pagesize) < 1:
+                #     continue
+                # else:
+                #     reuse_index = random.randint(0, self.num_ptes(pagesize) - 2)
+                random_pte_addr = random_walk[random_index].address
+                ptes[reuse_index] = self.ptes[random_pte_addr]
+                break
+            else:
+                raise Errors.InvalidConstraints('Could not find a suitable PTE for reuse!')
         
         elif kwargs.get('ptes'):
             for i, pte_attrs in enumerate(kwargs.get('ptes')):

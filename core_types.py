@@ -32,11 +32,7 @@ class SATP:
         return 22 if self.mode == 32 else 44
 
     def jsonify(self):
-        return {
-            'mode': self.mode,
-            'asid': self.asid,
-            'ppn': self.ppn
-        }
+        return {'mode': self.mode, 'asid': self.asid, 'ppn': self.ppn}
 
     def __str__(self):
         return self.__format__(DEFAULT_FORMAT)
@@ -90,7 +86,7 @@ class PTE:
             return (self.D, self.A, self.G, self.U, self.X, self.W, self.R, self.V)
 
         def jsonify(self):
-            return dict(zip(['RSW'] + list('DAGUXWRV'),[self.RSW] + list(self.flags))) # maybe change RSW
+            return dict(zip(['RSW'] + list('DAGUXWRV'), [self.RSW] + list(self.flags)))  # maybe change RSW
 
         def __str__(self):
             s = safe_to_bin(self.RSW, 2)
@@ -140,29 +136,27 @@ class PTE:
     # New: make it simpler to find whether it is a leaf
     @property
     def leaf(self):
-        return self.attributes.defined and (self.attributes.X | self.attributes.W | self.attributes.R)
+        return bool(self.attributes.X or self.attributes.W or self.attributes.R)
 
     def finalize(self):
         ''' Finalize the PTE flags with reasonable defaults. If there's stuff
          specified within a group (= XWR, AD), you need to specify the whole
-         thing or accept zeros filled in as defaults ''' 
-        
+         thing or accept zeros filled in as defaults '''
+
         if self.attributes.V is None:
             self.attributes.V = 1
-        
+
         if self.attributes.X is None and self.attributes.W is None and self.attributes.R is None:
-            xwr = random.choice( [ 0b001, 0b011, 0b100, 0b101, 0b111 ] )
+            xwr = random.choice([0b001, 0b011, 0b100, 0b101, 0b111])
             self.attributes.X = xwr >> 2
             self.attributes.W = (xwr >> 1) & 1
             self.attributes.R = xwr & 1
 
-
-        if self.attributes.D is None and self.attributes.A is None:
-            ad = random.choice([ 0b00, 0b10, 0b11 ])
+        if self.attributes.D is None and self.attributes.A is None and self.leaf:
+            ad = random.choice([0b00, 0b10, 0b11])
             self.attributes.A = ad >> 1
             self.attributes.D = ad & 1
 
-    
         self.attributes.RSW = self.attributes.RSW or 0
         self.attributes.D = self.attributes.D or 0
         self.attributes.A = self.attributes.A or 0
@@ -173,14 +167,13 @@ class PTE:
         self.attributes.R = self.attributes.R or 0
         self.attributes.V = self.attributes.V or 0
 
-
     def set_pointer(self):
         ''' Clear XWR (making this a pointer entry in the table). If they're set, raises an error '''
         ''' For non-leaf PTEs, the D, A, and U bits are reserved for future use and must be cleared by software for forward compatibility. '''
         if self.leaf:
-            raise InvalidXWR()
+            raise Errors.UnexpectedLeaf(f'PTE is a leaf and was used as a pointer')
         if self.attributes.U or self.attributes.D or self.attributes.A:
-            raise InvalidDAU()
+            raise Errors.InvalidDAU(f'Found DAU = {self.attributes.D}{self.attributes.A}{self.attributes.U}')
         self.attributes.X = 0
         self.attributes.W = 0
         self.attributes.R = 0
@@ -190,7 +183,7 @@ class PTE:
 
     def assert_pointer(self):
         if self.leaf:
-            raise Errors.UnexpectedLeaf()
+            raise Errors.UnexpectedLeaf(f'PTE is a leaf and was used as a pointer')
 
     def assert_global(self, assertion: bool) -> bool:
         if self.attributes.G:
@@ -215,7 +208,7 @@ class PTE:
 
         ppn = self.get_ppn()
         if ppn is None:
-            return ppn
+            return None
         return (ppn << 10) | pte
 
     def get_ppn(self):
@@ -369,11 +362,7 @@ class VA:
         return f'{header}\n{display_line}\n{val_line}'
 
     def jsonify(self):
-        return {
-            'data': self.data(),
-            'offset': self.offset,
-            'vpn': self.vpn
-        }
+        return {'data': self.data(), 'offset': self.offset, 'vpn': self.vpn}
 
 
 class PA:
@@ -434,11 +423,7 @@ class PA:
         return self.__format__(DEFAULT_FORMAT)
 
     def jsonify(self):
-        return {
-            'data': self.data(),
-            'ppn': self.ppn,
-            'offset': self.offset
-        }
+        return {'data': self.data(), 'ppn': self.ppn, 'offset': self.offset}
 
     def __format__(self, format_code=DEFAULT_FORMAT):
         data_str = f'{self.data():x}' if self.data() != None else '???'

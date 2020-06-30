@@ -78,7 +78,7 @@
                             <b-button variant="primary" @click="download_code()">Download Code</b-button>
                             <b-button variant="primary" @click="download_results()">Download Results</b-button>
                             <b-button variant="primary" @click="prettify()">Prettify</b-button>
-
+                            <b-button variant="danger" @click="clear()">Clear Results</b-button>
                             <b-dropdown text="Load Example">
                                 <b-dropdown-item v-for="example in examples" :key="example.name" :value="example.data"
                                     @click="code = example.data">{{ example.name }}</b-dropdown-item>

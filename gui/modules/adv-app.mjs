@@ -56,6 +56,9 @@ new Vue({
         prettify() {
             this.code = js_beautify(this.code, { brace_style: 'none,preserve-inline' });
         },
+        clear() {
+            this.results = [];
+        },
     },
     mounted() {
         this.code = this.examples[0].data;

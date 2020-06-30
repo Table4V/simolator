@@ -31,7 +31,7 @@ def equate(x: int, y: int, backing_value: int) -> Tuple[int, int]:
     elif x == y:
         return x, y
     else:
-        raise Errors.InvalidConstraints()
+        raise Errors.InvalidConstraints(f"Couldn't satisfy constraints: {x} != {y}")
 
 
 class ConstraintResolver:
@@ -133,7 +133,7 @@ class ConstraintResolver:
 
     def _resolve_satp_addr(self, satp: SATP, addr: int) -> int:
         ''' Modify the SATP to fit the constraints '''
-        addr = addr >> PAGE_SHIFT if addr != None else None
+        addr = (addr >> PAGE_SHIFT) if addr != None else None
         satp.ppn, addr = equate(satp.ppn, addr, self._random_pte_address() >> PAGE_SHIFT)
         return addr << PAGE_SHIFT
 
@@ -171,14 +171,14 @@ class ConstraintResolver:
         '''
         addr_val = addr & mask(OFFSET) if addr != None else None
         if addr_val and addr_val % self.PTESIZE:
-            return UnalignedAddress()
+            return Errors.UnalignedAddress('VA Address not aligned')
         addr_val = addr_val >> self.ALIGNMENT_BITS if addr_val != None else None
-        va.vpn[vpn_no], addr_val = equate(va.vpn[vpn_no], addr_val, _randbits(va.widths[vpn_no]))
+        va.vpn[vpn_no], addr_val = equate(va.vpn[vpn_no], addr_val, random.getrandbits(va.widths[vpn_no]))
         return addr_val << self.ALIGNMENT_BITS
 
     def _resolve_va_pa_final(self, va: VA, pa: PA, max_page_vpn: int = -1):
         ''' For the final pa := va part, accounting for bigpages. Use -1 for smallest page size (range inclusive) '''
-        va.offset, pa.offset = equate(va.offset, pa.offset, _randbits(12))  # offset always 12 bits
+        va.offset, pa.offset = equate(va.offset, pa.offset, random.getrandbits(12))  # offset always 12 bits
         # BOUNDS CHECK: I think this could be bigger than the physical memory (e.g. a 512GB page in Sv48) so we will use a PA bounded source here
         backing_values = self._chunk_random_pa_address()
         for i in range(max_page_vpn + 1):

@@ -3,6 +3,8 @@ from NewTranslator import TranslationWalk, InvalidTranslationWalk
 from Context import Context, ContextFromJSON, ContextFromJSON5
 from typing import Union
 from simulator_errors import Errors
+
+# import traceback
 # import benedict
 app = Flask(__name__)
 
@@ -59,11 +61,13 @@ def json5api():
         mgr = ContextFromJSON5(data)
         d = mgr.jsonify_color()
         return jsonify(d)
-    except (Errors.LeafMarkedAsPointer, Errors.InvalidConstraints):
+    except Errors.InvalidConstraints:
+        # print(traceback.format_exc())
         return jsonify({'error': "Couldn't satisfy the provided constraints"})
+    except Errors.LeafMarkedAsPointer:
+        return jsonify({'error': "Constraints given caused a leaf to be used as a pointer"})
     except ValueError:
         return jsonify({'error': 'JSON5 syntax error'})
-
 
 
 if __name__ == "__main__":

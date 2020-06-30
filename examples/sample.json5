@@ -40,7 +40,7 @@
         {
             repeats: 2,
             aliasing: 1,
-            reuse_pte: 1
+            reuse_pte: 1, // used together this can cause errors sometimes
         },
         {
             pagesize: '2M',
