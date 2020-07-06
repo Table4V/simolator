@@ -62,12 +62,15 @@ def json5api():
         d = mgr.jsonify_color()
         return jsonify(d)
     except Errors.InvalidConstraints:
-        # print(traceback.format_exc())
         return jsonify({'error': "Couldn't satisfy the provided constraints"})
+    except Errors.UnexpectedLeaf:
+        return jsonify({'error': "Constraints caused an unexpected leaf"})
     except Errors.LeafMarkedAsPointer:
         return jsonify({'error': "Constraints given caused a leaf to be used as a pointer"})
     except ValueError:
         return jsonify({'error': 'JSON5 syntax error'})
+    except:
+        return jsonify({'error': 'Unknown runtime error'})
 
 
 if __name__ == "__main__":

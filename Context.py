@@ -223,7 +223,7 @@ class Context:
         
         if type(pa) == PA:
             pass
-        elif aliasing and not reuse_pte:  # reuse an existing PA in the system
+        elif aliasing:  # reuse an existing PA in the system
             # -- can cause issues when used with PTE reuse, so that gets a special treatment
             pa_addr = random.sample(self.pas.keys(), 1)[0]
             pa = self.pas[pa_addr]
@@ -262,22 +262,27 @@ class Context:
             for i in range(PTE_REUSE_MAX_ATTEMPTS):
                 random_walk = random.choice(self.walks)
                 rwalk_ptes = random_walk.ptes
-                if aliasing: # TODO: use a more sophisticated thingy?
-                    pa = random_walk.pa
-                random_index = random.randint(0, len(rwalk_ptes) - 1)
-                if random_index == 0:
-                    reuse_index = 0
-                elif rwalk_ptes[random_index].leaf:
-                    reuse_index = self.num_ptes(pagesize) - 1
-                elif self.num_ptes(pagesize) > 2:
-                    reuse_index = random.randint(1, self.num_ptes(pagesize) - 2)
-                elif self.num_ptes(pagesize) > 1:
-                    reuse_index = 1
-                else:
-                    continue
 
-                random_pte_addr = rwalk_ptes[random_index].address
-                ptes[reuse_index] = self.ptes[random_pte_addr]
+
+                max_pte_walk = len(rwalk_ptes) - 1
+                leaf_index = self.num_ptes(pagesize) - 1
+                selection_index = random.randint(0, max_pte_walk)
+
+                if selection_index == max_pte_walk:
+                    if max_pte_walk == leaf_index:
+                        placed_location_index = leaf_index
+                        if aliasing:
+                            pa_addr = random_walk.pa.data() # fallback for picking a leaf
+                            pa = self.pas[pa_addr]
+                    else:
+                        continue
+                elif leaf_index == 0:
+                    continue
+                else:
+                    placed_location_index = random.randint(0, leaf_index - 1)
+
+                random_pte_addr = rwalk_ptes[selection_index].address
+                ptes[placed_location_index] = self.ptes[random_pte_addr]
                 break
             else:
                 raise Errors.InvalidConstraints('Could not find a suitable PTE for reuse!')
