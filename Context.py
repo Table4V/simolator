@@ -181,8 +181,30 @@ class Context:
 
         TODO: Clean this up a bit. Not much that can be eliminated, but stuff should be able to be moved around and parcelled out.
         '''
-        # Step one: create and load everything from the test case
 
+        # Work out our flags
+        same_va_pa: int = resolve_flag(same_va_pa)
+        aliasing: int = resolve_flag(aliasing)
+        reuse_pte: int = resolve_flag(reuse_pte)
+
+        # Change (Jun26) -- clean up the SATP usage.
+        # Reuse should no longer be necessary since it's the default
+        satp_data = kwargs.get('satp', {})
+        if type(satp_data) == int:
+            satp_data = { 'ppn' : satp_data }
+
+        if ppn := kwargs.get('satp.ppn'):
+            satp_data['ppn'] = ppn
+
+        if not satp_data:
+            satp = self.global_satp
+        else:
+            ppn = satp_data.get('ppn')
+            asid = kwargs.get('satp.asid') or satp_data.get('asid') or 0
+            satp = SATP(mode=self.mode, asid=asid, ppn=ppn)        
+
+
+        # Step one: create and load everything from the test case
         if type(pa) == dict:
             _pa = PA(mode=self.mode)
             _pa.offset = pa.get('offset') # unpack reflexive
@@ -201,8 +223,8 @@ class Context:
         
         if type(pa) == PA:
             pass
-        elif resolve_flag(aliasing):  # reuse an existing PA in the system
-            # -- can cause issues when used with PTE reuse
+        elif aliasing and not reuse_pte:  # reuse an existing PA in the system
+            # -- can cause issues when used with PTE reuse, so that gets a special treatment
             pa_addr = random.sample(self.pas.keys(), 1)[0]
             pa = self.pas[pa_addr]
         elif pa in self.pas.keys():
@@ -213,14 +235,14 @@ class Context:
         if type(va) == VA:
             pass
         else:
-            if resolve_flag(same_va_pa) and pa.data():
+            if same_va_pa and pa.data():
                 va = pa.data()
             if va in self.vas.keys():
                 va = self.vas[va]
             else:
                 va = VA(mode=self.mode, data=va)
 
-        if resolve_flag(same_va_pa):  # same VA and PA
+        if same_va_pa:  # same VA and PA
             if pa.data() and va.data():
                 pass
             elif pa.data():
@@ -230,46 +252,22 @@ class Context:
                 pa.set(va.data())
         
 
-        # Change (Jun26) -- clean up the SATP usage.
-        # Reuse should no longer be necessary since it's the default
-
-        # First order of resolution:
-        # reuse_satp = resolve_flag(kwargs.get('reuse_satp'))
-        # if reuse_satp:
-        #     satp = random.choice(self.satps)
-
-
-        satp_data = kwargs.get('satp', {})
-        if type(satp_data) == int:
-            satp_data = { 'ppn' : satp_data }
-
-        if ppn := kwargs.get('satp.ppn'):
-            satp_data['ppn'] = ppn
-
-        if not satp_data:
-            satp = self.global_satp
-        else:
-            ppn = satp_data.get('ppn')
-            asid = kwargs.get('satp.asid') or satp_data.get('asid') or 0
-            satp = SATP(mode=self.mode, asid=asid, ppn=ppn)
-            # else:
-            #     satp = kwargs.get('satp', {})
-            #     satp.pop('mode', None)
-            #     satp = SATP(mode=self.mode, **satp) #asid=kwargs.get('satp.asid', 0), ppn=kwargs.get('satp.ppn'))
-        
 
         ptes = [None] * self.num_ptes(pagesize)
-        reuse_pte = resolve_flag(reuse_pte)
         if reuse_pte:  # for now: not allowed with specifying PTE data
+            
             # Two issues here:
             # (1) it has to be handled as a leaf or non-leaf accordingly
             # (2) it needs to be reachable through the SATP if it's the first level
             for i in range(PTE_REUSE_MAX_ATTEMPTS):
-                random_walk = random.choice(self.walks).ptes
-                random_index = random.randint(0, len(random_walk) - 1)
+                random_walk = random.choice(self.walks)
+                rwalk_ptes = random_walk.ptes
+                if aliasing: # TODO: use a more sophisticated thingy?
+                    pa = random_walk.pa
+                random_index = random.randint(0, len(rwalk_ptes) - 1)
                 if random_index == 0:
                     reuse_index = 0
-                elif random_walk[random_index].leaf:
+                elif rwalk_ptes[random_index].leaf:
                     reuse_index = self.num_ptes(pagesize) - 1
                 elif self.num_ptes(pagesize) > 2:
                     reuse_index = random.randint(1, self.num_ptes(pagesize) - 2)
@@ -278,13 +276,7 @@ class Context:
                 else:
                     continue
 
-                # if attempt.leaf:
-                #     reuse_index = self.num_ptes(pagesize) - 1
-                # elif self.num_ptes(pagesize) < 1:
-                #     continue
-                # else:
-                #     reuse_index = random.randint(0, self.num_ptes(pagesize) - 2)
-                random_pte_addr = random_walk[random_index].address
+                random_pte_addr = rwalk_ptes[random_index].address
                 ptes[reuse_index] = self.ptes[random_pte_addr]
                 break
             else:
