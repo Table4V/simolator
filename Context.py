@@ -481,7 +481,7 @@ def ContextFromJSON(json_data: Union[str, dict]) -> Context:
                     except (Errors.SuperPageNotCleared, Errors.InvalidConstraints):
                         pass
                 else:
-                    raise Errors.InvalidConstraints(f"Couldn't satisfy constraints after {i+1} tries")
+                    raise Errors.InvalidConstraints(f"Couldn't satisfy constraints after {ADD_CASE_MAX_ATTEMPTS} tries (pg range)")
                 current_addr += step or PAGESIZE_INT_MAP[mgr.walks[-1].pagesize]
                 n_iters += 1
 
@@ -491,7 +491,17 @@ def ContextFromJSON(json_data: Union[str, dict]) -> Context:
                     use_case = {**test_case, **special_args.get(i, {})}
                 else:
                     use_case = test_case
-                mgr.add_test_case(**test_case)
+                
+                for _ in range(ADD_CASE_MAX_ATTEMPTS):
+                    try:
+                        mgr.add_test_case(**use_case)
+                        break
+                    except (Errors.SuperPageNotCleared, Errors.InvalidConstraints):
+                        pass
+                else:
+                    raise Errors.InvalidConstraints(f"Couldn't satisfy constraints after {ADD_CASE_MAX_ATTEMPTS} tries (main flow)")
+
+
 
     return mgr
 
