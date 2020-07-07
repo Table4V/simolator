@@ -340,8 +340,9 @@ class Context:
             # Leaf marked as pointer
             if resolve_flag(use_errs.get('leaf_as_pointer')):
                 err = True
-                ptes[-1].attributes.R = 0 
                 ptes[-1].attributes.X = 0
+                ptes[-1].attributes.W = 0
+                ptes[-1].attributes.R = 0 
             # Superpage has data set
             if resolve_flag(use_errs.get('uncleared_superpage')):
                 err = True
