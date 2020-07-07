@@ -24,6 +24,7 @@ NullableInt = Union[int, None]
 bg.set_style('orange', RgbBg(255, 150, 50))
 
 PTE_REUSE_MAX_ATTEMPTS = 5
+ADD_CASE_MAX_ATTEMPTS = 5
 
 
 class Context:
@@ -473,7 +474,7 @@ def ContextFromJSON(json_data: Union[str, dict]) -> Context:
                     use_case = {**test_case, **special_args.get(n_iters, {})}
                 else:
                     use_case = test_case
-                for i in range(5): # how many failures we will try before we give up
+                for i in range(ADD_CASE_MAX_ATTEMPTS): # how many failures we will try before we give up
                     try:
                         mgr.add_test_case(**use_case, pa=current_addr)
                         break
