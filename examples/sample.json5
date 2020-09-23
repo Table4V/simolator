@@ -1,6 +1,6 @@
 {
     // comments
-    mode: 48, // Sv3/9
+    mode: 48, // Sv48
     // Sample JSON for running test cases
     // memory_size: 0x8000000000,
     test_cases: [
