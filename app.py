@@ -1,5 +1,5 @@
 from flask import Flask, send_from_directory, request, jsonify
-from NewTranslator import TranslationWalk, InvalidTranslationWalk
+from Translator import TranslationWalk, InvalidTranslationWalk
 from Context import Context, ContextFromJSON, ContextFromJSON5
 from typing import Union
 from simulator_errors import Errors

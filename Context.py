@@ -15,7 +15,7 @@ from utils import safe_to_bin, safe_to_hex, rsetattr, rgetattr, addr_to_memsize,
 from typeutils import resolve_flag, resolve_int
 from core_types import PA, PTE, SATP, VA
 from constants import PT_LEVEL_MAP, MAX_PA_MAP, MODE_PAGESIZE_LEVEL_MAP, PA_BITS, PAGESIZE_INT_MAP
-from NewTranslator import TranslationWalk, InvalidTranslationWalk
+from Translator import TranslationWalk, InvalidTranslationWalk
 
 from ConstraintResolver import ConstraintResolver
 
