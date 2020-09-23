@@ -27,6 +27,10 @@ PAGE_SHIFT = 12
 
 
 class TranslationWalk:
+    '''
+    This class holds a Translation Walk, and exposes the boilerplate calculations,
+    as well as a method for resolving the blanks in the Translation Walk.
+    '''
     pagesize = '4K'
     # va = VA()
     # ptes: List[PTE] = []
@@ -167,6 +171,9 @@ class TranslationWalk:
 
 
 class InvalidTranslationWalk(TranslationWalk):
+    '''
+    Almost identical subclass of TranslationWalk, but has special handling of resolving junk, as well as error type support.
+    '''
     def __init__(self, mode=None, pagesize=None, satp=None, va=None, pa=None, ptes=None, error_type=None):
         super().__init__(mode=mode, pagesize=pagesize, satp=satp, va=va, pa=pa, ptes=ptes)
         self.error_type = error_type
