@@ -200,7 +200,8 @@ Table4V offers the following parameter choices:
 
 - Other Parameters:
     - aliasing: `aliasing: 1` to set, other floats for probability. This is two VAs to the same PA.
-    - 'reuse_pte': `repeats: 1` to set, other floats for probability. This is whether a PTE in this path will be reused from a **previously generated** PTE. **This cannot be used on the first `test_case`**.
+    - VA = PA: `same_va_pa: 1` to set, other floats for probability. This is a page table walk where the VA is equal to the resulting PA.
+    - 'reuse_pte': `reuse_pte: 1` to set, other floats for probability. This is whether a PTE in this path will be reused from a **previously generated** PTE. **This cannot be used on the first `test_case`**.
     - pagesize: can be set on a test case. `pagesize: ...`. Takes an abbreviated string, e.g. `"2M"`, including a list of them in which case it will randomly choose from the list.
     - "page_range": generates a range of pages.
         Can be invoked either as:
