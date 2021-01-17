@@ -2,11 +2,11 @@
 
 ## The RISC-V Page Table
 
-The RISC-V page table formats can be found in [`RISC-V Privileged ISA Specification`](https://riscv.org/specifications/privileged-isa/). Current RISC-V (**Document Version 20190608-Priv-MSU-Ratified**) supports three types of virtual memory, Sv32 for RV32, Sv39 and Sv48 for RV64, which supports 32-bit, 39-bit and 48-bit virtual address space respectively.
+The RISC-V page table formats can be found in the [`RISC-V Privileged ISA Specification`](https://riscv.org/specifications/privileged-isa/). Currently RISC-V supports three types of virtual memory, Sv32 for RV32, Sv39 and Sv48 for RV64, which supports 32-bit, 39-bit and 48-bit virtual address space respectively.
 
 ### Sv32 Implementation
 
-![](/images/riscv-page-table/Sv32.png)
+![](images/riscv-page-table/Sv32.png)
 
 The page table format of Sv32 is as above. The page size of Sv32 is 4 KiB, which is a popular page size. Thus, it has a 12-bit long page offset (which enables byte-level addressign). With each page table entry(**PTE**) being 4 bytes, each page table contains 1024 page table entries. The higher 20 bits of the virtual address (virtual page number) is divided into two parts, VPN[0] and VPN[1], 10 bits each to support a two-level page table.
 
@@ -26,15 +26,15 @@ The lower 10 bits of a page table entry encodes the ***protection bits*** of thi
 
 Besides, different combinations of R, W and X bits also have special meanings.
 
-![](/images/riscv-page-table/PTE bits.png)
+![](images/riscv-page-table/PTE bits.png)
 
 
 
 ## Sv39 Implementation
 
-![](/images/riscv-page-table/Sv39-1.png)
+![](images/riscv-page-table/Sv39-1.png)
 
-![](/images/riscv-page-table/Sv39-2.png)
+![](images/riscv-page-table/Sv39-2.png)
 
 Sv39 implementations support 39-bit virtual address space, divided into 4 KiB pages. As the PTE of Sv39 has 8 bytes with the highest 10 bits reserved and must be set to 0, there are only 512 rather than 1024 PTEs on one page.
 
@@ -44,7 +44,7 @@ Otherwise, Sv39 is similar to Sv32.
 
 ## Sv48 Implementation
 
-![](/images/riscv-page-table/Sv48.png)
+![](images/riscv-page-table/Sv48.png)
 
 Sv48 supports a 4-level page table and 512 GiB terapages besides 4 KiB pages, 2 MiB megapages, and 1 GiB gigapages. Sv48 implementation is similar to Sv39 implementation in most other respects.
 
