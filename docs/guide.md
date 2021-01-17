@@ -224,4 +224,3 @@ Table4V offers the following parameter choices:
                 num_pages: 100,
             }
             ```
-
