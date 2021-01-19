@@ -1,5 +1,9 @@
 # User Guide for Table4V
 
+## Introduction
+
+**Table4V** is a development tool which creates 'interesting' page table walk for verification uses. We aim to provide both an extremely high degree of customization as well as very simple usage for basic cases, so it can be used easily 'out of the box'. It provides both a visual interface for smaller usage as well as the ability to export very large (50,000+ walks) test vectors with command line tools.
+
 ## The RISC-V Page Table
 
 The RISC-V page table formats can be found in the [`RISC-V Privileged ISA Specification`](https://riscv.org/specifications/privileged-isa/). Currently RISC-V supports three types of virtual memory, Sv32 for RV32, Sv39 and Sv48 for RV64, which supports 32-bit, 39-bit and 48-bit virtual address space respectively.
@@ -8,7 +12,7 @@ The RISC-V page table formats can be found in the [`RISC-V Privileged ISA Specif
 
 ![](images/riscv-page-table/Sv32.png)
 
-The page table format of Sv32 is as above. The page size of Sv32 is 4 KiB, which is a popular page size. Thus, it has a 12-bit long page offset (which enables byte-level addressign). With each page table entry(**PTE**) being 4 bytes, each page table contains 1024 page table entries. The higher 20 bits of the virtual address (virtual page number) is divided into two parts, VPN[0] and VPN[1], 10 bits each to support a two-level page table.
+The page table format of Sv32 is as above. The page size of Sv32 is 4 KiB, which is a popular page size. Thus, it has a 12-bit long page offset (which enables byte-level addressign). With each page table entry (**PTE**) being 4 bytes, each page table contains 1024 page table entries. The higher 20 bits of the virtual address (virtual page number) is divided into two parts, VPN[0] and VPN[1], 10 bits each to support a two-level page table.
 
 The 20 bits virtual page number is translated into a 22-bit physical page number via a two-level page table. In addition, Sv32 also supports 4 MiB megapages.
 
@@ -18,6 +22,7 @@ The lower 10 bits of a page table entry encodes the ***protection bits*** of thi
 - R: This bit determines whether this page is readable, readable when R = 1.
 - W: This bit determines whether this page is writable, writable when W = 1.
 - X: This bit determines whether this page is executable, executable when X = 1.
+- Note these three together, XWR = 000, marks a pointer PTE. Pointers **must** have XWR = 000.
 - U: This bit determines whether this page belongs to the user. If U = 0, U mode cannot access this page. If U = 1, U mode can access this page and S mode can access this page only when ***SUM bit*** in the sstatus register is set. And this bit must be cleared for non-leaf PTEs.
 - G: This bit indicates whether this mapping is valid for all virtual address spaces, and the hardware can use this information to improve the performance of address translation. Generally, this bit is only used for pages belonging to the operating system.
 - A: Accessed bit, must be cleared for non-leaf PTEs.
@@ -54,7 +59,7 @@ Virtual address is translated to physical address level by level.
 
 1. Get the root page table number from the ***satp*** register's PPN field.
 2. Find a PTE using the first VPN field of virtual address, and it may raise ***an access exception***.
-3. Determined whether it's a valid PTE according to the lowest four bits. If not, raise ***a page-fault exception***. Otherwise, if the XWR bits are all 0, the PPN field is the physical page number of the next level page table. Then it walks the next level page table using the next VPN field, and goes to step 2 again until a leaf PTE is found. If there is no next VPN field, then it will raise a **page-fault exception**.
+3. Determined whether it's a valid PTE according to the lowest four bits. If not, raise ***a page-fault exception***. Otherwise, if the XWR bits are all 0, then this PTE is a pointer, and the PPN field is the physical page number of the next level page table. Then it walks the next level page table using the next VPN field, and goes to step 2 again until a leaf PTE is found. If there is no next VPN field, then it will raise a **page-fault exception**.
 4. Check whether the memory access is allowed according to PTE bits, current privilege mode and some fields of ***mstatus*** register. If not allowed, raise a **page-fault exception**.
 5. If it is not a 4 KiB page, which means there are remaining VPN fields unused before, then check whether the corresponding PPN fields are all 0. If not, raise a **page-fault exception**.
 6. Do the remaining work according to the A and D bits and access type, which may raise **an access exception** (If this access violates a PMA or PMP check) or **a page-fault exception**.
@@ -62,7 +67,7 @@ Virtual address is translated to physical address level by level.
 
 ## Our Mechanism
 
-To simplify the PTW as discussed above, we can essentially say that this can boil down to `PPN * PAGESIZE + VPN(i)`, or essentially just concatenating the VPN (or offset for the final level) bits to the PPN.
+The core computation of the address as specified in the documentation is `PPN * PAGESIZE + VPN(i) * PTESIZE`. Another way of thinking of it is essentially just concatenating the VPN (or offset for the final level) bits to the PPN with zero bits for the PTESIZE.
 
 ## Usage
 
@@ -198,7 +203,7 @@ Table4V offers the following parameter choices:
             }
         ```
 
-- Other Parameters:
+- Testing Knowledge Biases:
     - aliasing: `aliasing: 1` to set, other floats for probability. This is two VAs to the same PA.
     - VA = PA: `same_va_pa: 1` to set, other floats for probability. This is a page table walk where the VA is equal to the resulting PA.
     - 'reuse_pte': `reuse_pte: 1` to set, other floats for probability. This is whether a PTE in this path will be reused from a **previously generated** PTE. **This cannot be used on the first `test_case`**.
