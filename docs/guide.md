@@ -2,7 +2,7 @@
 
 ## Introduction
 
-**Table4V** is a development tool which creates 'interesting' page table walk for verification uses. We aim to provide both an extremely high degree of customization as well as very simple usage for basic cases, so it can be used easily 'out of the box'. It provides both a visual interface for smaller usage as well as the ability to export very large (50,000+ walks) test vectors with command line tools.
+**Table4V** is a development tool which leverages testing knowledge to create 'interesting' page table walks for verification uses. We aim to provide both an extremely high degree of customization as well as very simple usage for basic cases, so it can be used easily 'out of the box'. It provides both a visual interface for smaller usage as well as the ability to export very large (50,000+ walks) test vectors with command line tools.
 
 ## The RISC-V Page Table
 
