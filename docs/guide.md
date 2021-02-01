@@ -68,9 +68,7 @@ Besides, different combinations of R, W and X bits also have special meanings.
 
 ![](images/riscv-page-table/PTE bits.png)
 
-
-
-## Sv39 Implementation
+### Sv39 Implementation
 
 ![](images/riscv-page-table/Sv39-1.png)
 
@@ -82,7 +80,7 @@ Sv39 uses a three-level page table where the higher bits of the virtual address 
 
 Otherwise, Sv39 is similar to Sv32.
 
-## Sv48 Implementation
+### Sv48 Implementation
 
 ![](images/riscv-page-table/Sv48.png)
 
@@ -264,3 +262,13 @@ Table4V offers the following parameter choices:
                 num_pages: 100,
             }
             ```
+
+## References
+
+- RISC-V Privileged ISA specification, at <https://riscv.org/technical/specifications/>.
+
+- JSON5, at <https://json5.org/>.
+
+- Table4V GitHub repository, at <https://github.com/Table4V/simulator>.
+
+- Table4V online interface, at <https://table4v.herokuapp.com/>.
