@@ -2,7 +2,7 @@
 
 ## Abstract
 
-We present the **Table4V** project. Table4V is a development tool which leverages testing knowledge to create 'interesting' page table walks for verification uses. We aim to provide both an extremely high degree of customization as well as very simple usage for basic cases, so it can be used easily 'out of the box' both for educational settings, as well as in an enterprise setting. It provides both a visual interface for smaller usage as well as the ability to export very large (50,000+ walks) test vectors with command line tools.
+We present the **Table4V** project. Table4V is a development tool which leverages testing knowledge to create 'interesting' page table walks for verification uses. We aim to provide both an extremely high degree of customization as well as very simple usage for basic cases, so it can be used easily 'out of the box' both for educational settings, as well as in an enterprise setting. It provides both a visual interface for smaller usage as well as the ability to export very large (50,000+ walks) test vectors with command line tools. It is available as an online tool, as well as a command line utility.
 
 ## Background
 
@@ -35,9 +35,17 @@ When this project was initially formulated, there were roughly ten goals in term
 
 Over the course of the project, all initially formulated goals were achieved; with the sole exception of switching to a CSP-based system. After reviewing it carefully, all parties involved with the project agreed that applying CSP to the problem at hand was overkill; that the complexity engendered was not required by the problem, and that a more limited but purposeful method of solving the constraints would be more performant, and easier to implement and maintain. This limited resolver was then implemented and used in this project.
 
-## Introduction
+The inital GUI was discarded altogether in favor of a web-based solution. This allows us to implement it online -- at <https://table4v.herokuapp.com/>. In addition, this allowed us to unify the core architecture around a JSON output format -- outputting it for the web viewer, as well serving as the output format for command line usage, where we can handle extremely large test vectors as necessary. That allowed us to build everything off a single unified backend.
 
-**Table4V** is a development tool which leverages testing knowledge to create 'interesting' page table walks for verification uses. We aim to provide both an extremely high degree of customization as well as very simple usage for basic cases, so it can be used easily 'out of the box'. It provides both a visual interface for smaller usage as well as the ability to export very large (50,000+ walks) test vectors with command line tools.
+We also note the project was originally formulated for roughly 3-4 students, and ended up being done alone without any reductions in scope.
+
+## Summary
+
+The Table4V project provides an easily accessible online interface for educational and exploratory purposes, as code interfaces for industrial-scale usage. It allows verifiers to leverage their existing knowledge and skills with powerful preset features. It is performant and interoperable with other tools and frameworks. It allows easy modification, and it is a powerful and easily extensible framework, which can be modified easily as future versions of the architecture may introduce new features.
+
+## Detailed Reference
+
+We now attach a guide to the RISC-V page table and a detailed reference guide to the usage of the simulator.
 
 ## The RISC-V Page Table
 
@@ -257,7 +265,7 @@ Table4V offers the following parameter choices:
         or as
 
         - start, num_pages:
-        
+
             ```json5
             "page_range": { 
                 start: 0x10000,
