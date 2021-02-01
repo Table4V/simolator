@@ -1,4 +1,39 @@
-# User Guide for Table4V
+# Table4V: Address Translation Simulation for RISC-V
+
+## Abstract
+
+We present the **Table4V** project. Table4V is a development tool which leverages testing knowledge to create 'interesting' page table walks for verification uses. We aim to provide both an extremely high degree of customization as well as very simple usage for basic cases, so it can be used easily 'out of the box' both for educational settings, as well as in an enterprise setting. It provides both a visual interface for smaller usage as well as the ability to export very large (50,000+ walks) test vectors with command line tools.
+
+## Background
+
+Memory Management Units (MMU) are computer hardware units that are responsible for mapping memory references to physical memory. They offer a number of substantial benefits: they allow virtualization, permission management, and memory defragmentation. They allow address translation -- letting multiple programs that may have the same *logical* address run concurrently. On some platforms, they allowed legacy ISAs to utilize more memory than the address space would otherwise allow. Using the MMU to separate memory references into distinct pages also enables swapfile-type systems to operate. Therefore, as a critical component in modern chipsets, proper verification of MMUs is required. However, like all phases of verification, MMU verification presents its own unique challenges. MMUs need to be tested intependently of the operating system. Since they operate without OS services, they require independent reference address translation mapping.
+
+Table4V originated as an IBM hackathon project, and was greatly expanded and developed upon as a student project.
+
+The core of Table4V is an object-oriented representation of the state of the memory management unit. This, by necessity, is a '_sparse_' representation. As RISC-V is meant to be an expandable, futureproof, and versatile ISA, almost 'one ISA to rule them all', as it were, it accommodates a staggeringly large access space. The most 'normal' virtual memory format, _Sv39_ supports a fairly conventional 512 GB, but the most expansive format, _Sv48_ supports 256 TiB of address space. Any practical setup therefore must rely on sparse simulation -- where PTEs are created when necessary, and are held independently, not in an enormous memory bank. This is the approach taken throughout the project: we create memory representations only once necessary.
+
+A further challenge posed by the size is that it means that we are unlikely to get interesting cases. If, for example, physical addresses were allocated at random, then we would require roughly 20,000,000 allocations to reach a 50% chance of having two programs referring to the same physical address. In practice, however, this is far more likely. For instance, two programs may be given a reference to `libc` or to a system routine they need to call. In the vast void of address space provided by these implementations, it's unlikely that we would see 'interesting' behavior without having some sort of specialized handling of that. Edge cases are highly unlikely to come up in the course of random simulation, and not merely highly likely but rather _certain_ to come up in the course of actual normal usage of a chip.
+
+That is where 'testing knowledge' enters. Randomly generated page table walks are not all that satisfying. They will not turn up our edge cases without bogging down the computers used to simulate or verify under a massive heap of uninteresting tests. We will want something more 'exciting'. In order to achieve that, we enter in another factor. The experience of MMU verifiers yields that there are classes of problems that are much more interesting than just random walks. They include '_aliasing_', where we have multiple virtual references to the same PA. This edge case, as noted above, is almost certain to happen in the course of normal operation, as, for instance, multiple processes may need to access the same syscall. Another is '_pte reuse_', where we have a PTE on different walks, and yet another is '_VA = PA_', where a logical address is equal to the resulting physical address of the page table walk. Yet another is invalid walks -- sometimes programs ask for memory they don't have access to. One of the core responsibilities of the MMU is to prevent privilege escalation and illegal memory accesses, and this needs to be verified as well.
+
+Since experience shows that these edge cases are critical components of MMU verification, we generate them easily -- the user just needs to ask. They can even be combined where they are logically consistent. Thusly, we hope to provide a tool that allows verifiers to leverage their knowledge of the cases that worry them most to create the best test vectors for their needs.
+
+## Project Goals
+
+When this project was initially formulated, there were roughly ten goals in terms of feature support that needed to be added, in addition to broader stability and functionality improvements to the codebase.
+
+1. Making PTEs editable.
+1. GUI improvements.
+1. Display data and name fields.
+1. Assigning fields values with a given probability
+1. VA = PA
+1. PTE Reuse
+1. Aliasing
+1. Supporting page ranges (i.e. mapping to many consecutive pages) support
+1. Supporting exceptions (all the various things that can go wrong)
+1. Using CSP (Constraint Satisfaction Problem) solvers.
+
+Over the course of the project, all initially formulated goals were achieved; with the sole exception of switching to a CSP-based system. After reviewing it carefully, all parties involved with the project agreed that applying CSP to the problem at hand was overkill; that the complexity engendered was not required by the problem, and that a more limited but purposeful method of solving the constraints would be more performant, and easier to implement and maintain. This limited resolver was then implemented and used in this project.
 
 ## Introduction
 
@@ -6,11 +41,11 @@
 
 ## The RISC-V Page Table
 
-The RISC-V page table formats can be found in the [`RISC-V Privileged ISA Specification`](https://riscv.org/specifications/privileged-isa/). Currently RISC-V supports three types of virtual memory, Sv32 for RV32, Sv39 and Sv48 for RV64, which supports 32-bit, 39-bit and 48-bit virtual address space respectively.
+The RISC-V page table formats can be found in the [`RISC-V Privileged ISA Specification`](https://riscv.org/technical/specifications/). Currently RISC-V supports three types of virtual memory, Sv32 for RV32, Sv39 and Sv48 for RV64, which supports 32-bit, 39-bit and 48-bit virtual address space respectively.
 
 ### Sv32 Implementation
 
-![](images/riscv-page-table/Sv32.png)
+![Sv32 Page Table](images/riscv-page-table/Sv32.png)
 
 The page table format of Sv32 is as above. The page size of Sv32 is 4 KiB, which is a popular page size. Thus, it has a 12-bit long page offset (which enables byte-level addressign). With each page table entry (**PTE**) being 4 bytes, each page table contains 1024 page table entries. The higher 20 bits of the virtual address (virtual page number) is divided into two parts, VPN[0] and VPN[1], 10 bits each to support a two-level page table.
 
