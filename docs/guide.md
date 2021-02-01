@@ -37,8 +37,6 @@ Over the course of the project, all initially formulated goals were achieved; wi
 
 The inital GUI was discarded altogether in favor of a web-based solution. This allows us to implement it online -- at <https://table4v.herokuapp.com/>. In addition, this allowed us to unify the core architecture around a JSON output format -- outputting it for the web viewer, as well serving as the output format for command line usage, where we can handle extremely large test vectors as necessary. That allowed us to build everything off a single unified backend.
 
-We also note the project was originally formulated for roughly 3-4 students, and ended up being done alone without any reductions in scope.
-
 ## Summary
 
 The Table4V project provides an easily accessible online interface for educational and exploratory purposes, as code interfaces for industrial-scale usage. It allows verifiers to leverage their existing knowledge and skills with powerful preset features. It is performant and interoperable with other tools and frameworks. It allows easy modification, and it is a powerful and easily extensible framework, which can be modified easily as future versions of the architecture may introduce new features.
