@@ -223,6 +223,7 @@ Table4V offers the following parameter choices:
         - `"uncleared_superpage"`
     - weights: an optional numeric array to weight how often each one will be chosen relative to the others.
     - Example:
+        
         ```json5
             errors: {
                 p: 0.5, // overall error probability
@@ -256,6 +257,7 @@ Table4V offers the following parameter choices:
         or as
 
         - start, num_pages:
+        
             ```json5
             "page_range": { 
                 start: 0x10000,
