@@ -5,7 +5,7 @@ Flask==1.1.2
 ftfy==5.7
 idna==2.9
 itsdangerous==1.1.0
-Jinja2==2.11.2
+Jinja2==2.11.3
 json5==0.9.4
 mailchecker==3.3.8
 MarkupSafe==1.1.1
